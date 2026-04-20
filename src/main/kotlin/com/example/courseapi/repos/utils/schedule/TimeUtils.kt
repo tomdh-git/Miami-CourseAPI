@@ -53,12 +53,22 @@ fun charToDay(c: Char) = when (c) {
 }
 
 fun parseTimeSlot(slot: String): Sequence<Interval> = sequence {
-    val matches = timeSlotRegex.findAll(slot)
-    for (m in matches) {
+    val matches = timeSlotRegex.findAll(slot).toList()
+    for ((i, m) in matches.withIndex()) {
         val groupValues = m.groupValues
         val daysStr = groupValues[1]
         val start = toMinutes(groupValues[2])
         val end = toMinutes(groupValues[3])
+
+        // Get the text between this match's end and the next match's start (or end of string)
+        val segmentEnd = if (i + 1 < matches.size) matches[i + 1].range.first else slot.length
+        val afterText = slot.substring(m.range.last + 1, segmentEnd)
+
+        // Skip final exam entries: they have a single date (MM/DD) but no date range (MM/DD - MM/DD)
+        val hasDateRange = afterText.contains(Regex("""\d{2}/\d{2}\s*-\s*\d{2}/\d{2}"""))
+        val hasSingleDate = afterText.contains(Regex("""\d{2}/\d{2}"""))
+        if (hasSingleDate && !hasDateRange) continue
+
         for (dayChar in daysStr) {
             val day = charToDay(dayChar) ?: continue
             yield(Interval(day, start, end))

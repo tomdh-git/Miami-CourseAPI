@@ -12,8 +12,15 @@ import org.springframework.stereotype.Repository
 @Repository
 class ScheduleRepo(private val course: CourseRepo) {
     suspend fun getScheduleByCourses(input: ScheduleByCourseInput): List<Schedule> {
-        val fetched = fetchCourses(parseCourses(input.courses), input,course)
+        val parsedCourses = parseCourses(input.courses)
+        val fetched = fetchCourses(parsedCourses, input,course)
         val valid = fetched.filterValues { it.isNotEmpty() }
+        
+        val uniqueParsedCount = parsedCourses.toSet().size
+        if (valid.size < uniqueParsedCount) {
+            throw QueryException("Could not find valid sections for all requested courses")
+        }
+        
         if (valid.isEmpty()) throw QueryException("No valid schedules found")
         
         val startMin = toMinutes(input.preferredStart ?: "12:00am")

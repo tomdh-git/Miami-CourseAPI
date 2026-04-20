@@ -12,10 +12,37 @@ import org.springframework.web.bind.annotation.CrossOrigin
 @Controller
 @CrossOrigin(origins = ["*"])
 class ScheduleResolver(private val ss: ScheduleService) {
+
+    /**
+     * async function getScheduleByCourses
+     * @param input: ScheduleByCourseInput (DTO)
+     * @return ScheduleResult
+     *      SuccessSchedule: List<Schedule>
+     *      @throws: ErrorSchedule
+     *
+     * @description
+     * calls safe wrapped getScheduleByCourses in ScheduleService
+     *
+     * @example
+     * query{getScheduleByCourses(input:{}){... on SuccessSchedule{schedules:{}}... on ErrorSchedule{error,message}}}
+     * */
     @QueryMapping
     suspend fun getScheduleByCourses(@Argument input: ScheduleByCourseInput): ScheduleResult =
         scheduleSafe{ss.getScheduleByCourses(input)}
 
+    /**
+     * async function getFillerByAttributes
+     * @param input: FillerByAttributesInput (DTO)
+     * @return ScheduleResult
+     *      SuccessSchedule: List<Schedule>
+     *      @throws: ErrorSchedule
+     *
+     * @description
+     * calls safe wrapped getFillerByAttributes in ScheduleService
+     *
+     * @example
+     * query{getFillerByAttributes(input:{}){... on SuccessSchedule{schedules:{}}... on ErrorSchedule{error,message}}}
+     * */
     @QueryMapping
     suspend fun getFillerByAttributes(@Argument input: FillerByAttributesInput): ScheduleResult=
         scheduleSafe{ss.getFillerByAttributes(input)}
