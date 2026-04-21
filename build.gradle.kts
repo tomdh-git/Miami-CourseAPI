@@ -15,7 +15,9 @@ java {
 }
 
 repositories {
+    mavenLocal()
     mavenCentral()
+    maven { url = uri("https://jitpack.io") }
 }
 
 dependencyManagement {
@@ -54,6 +56,9 @@ dependencies {
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("io.mockk:mockk:1.13.13")
     testImplementation("com.netflix.graphql.dgs:graphql-dgs-spring-graphql-starter-test")
+
+    // Math & Combinatorics
+    implementation("com.github.tomdh-git:interval-combinator:main-SNAPSHOT")
 }
 
 tasks.withType<Test> {
