@@ -9,12 +9,30 @@ spring:
     multipart:
       max-file-size: 10MB
       max-request-size: 10MB
-
-miami:
-  api:
-    url: https://www.apps.miamioh.edu/courselist/
-    token-timeout-ms: 45000
-    html-cache-timeout-ms: 30000
+  lifecycle:
+    timeout-per-shutdown-phase: 30s
 
 server:
   port: 0
+  shutdown: graceful
+
+management:
+  endpoints:
+    web:
+      base-path: /
+      path-mapping:
+        health: health
+  endpoint:
+    health:
+      show-details: always
+
+miami:
+  api:
+    url: ${MIAMI_API_URL:https://www.apps.miamioh.edu/courselist/}
+    token-timeout-ms: 45000
+    html-cache-timeout-ms: 30000
+    fields-cache-timeout-ms: 3600000
+    request-timeout-ms: 28000
+    token-refresh-threshold-ms: 35000
+    connect-timeout-ms: 30000
+    read-write-timeout-sec: 60

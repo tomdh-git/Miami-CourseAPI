@@ -1,5 +1,6 @@
-package com.example.courseapi.schools.miami
+package com.example.courseapi.schools.miami.client
 
+import com.example.courseapi.schools.miami.MiamiConfig
 import jakarta.annotation.PostConstruct
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -12,7 +13,6 @@ import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Component
 import org.springframework.web.reactive.function.client.WebClient
 import kotlinx.coroutines.reactor.awaitSingle
-import com.example.courseapi.config.MiamiConfig
 import org.slf4j.LoggerFactory
 
 @Component
@@ -20,7 +20,6 @@ class MiamiClient(private val webClient: WebClient, private val config: MiamiCon
     private val logger = LoggerFactory.getLogger(MiamiClient::class.java)
     @Volatile private var lastToken: String? = null
     @Volatile private var lastTokenTs: Long = 0
-    private val refreshThreshold = 35_000L
     private val tokenLock = Mutex()
     @Volatile private var refreshJob: Job? = null
     private val refreshScope = CoroutineScope(Dispatchers.IO)
@@ -28,7 +27,7 @@ class MiamiClient(private val webClient: WebClient, private val config: MiamiCon
     @Volatile private var cachedHtmlTs: Long = 0
     private val htmlCacheLock = Mutex()
     private val tokenRegex = Regex("""<input[^>]*name="_token"[^>]*value="([^"]+)"""")
-    
+
     data class HttpTextResponse(val status: Int, val body: String)
 
     private val cookies = java.util.concurrent.ConcurrentHashMap<String, String>()
@@ -37,18 +36,18 @@ class MiamiClient(private val webClient: WebClient, private val config: MiamiCon
     fun warmUpConnection() {
         refreshScope.launch {
             try { getCourseList() }
-            catch (e: Exception) { 
+            catch (e: Exception) {
                 logger.warn("Failed to warm up connection", e)
             }
         }
     }
 
-    suspend fun getCourseList(): String {
+    suspend fun getCourseList(forceFresh: Boolean = false): String {
         val now = System.currentTimeMillis()
         val cached = cachedHtml
         val age = now - cachedHtmlTs
 
-        val requestFresh = cached != null && age < config.htmlCacheTimeoutMs
+        val requestFresh = !forceFresh && cached != null && age < config.htmlCacheTimeoutMs
         if (requestFresh) return cached
 
         return htmlCacheLock.withLock {
@@ -56,11 +55,13 @@ class MiamiClient(private val webClient: WebClient, private val config: MiamiCon
             val againCached = cachedHtml
             val againAge = againNow - cachedHtmlTs
 
-            val requestFreshAgain = againCached != null && againAge < config.htmlCacheTimeoutMs
-            if (requestFreshAgain) {
-                return againCached
-            }
+            val recentlyForced = forceFresh && againCached != null && againAge < 5000
+            val requestFreshAgain = (!forceFresh && againCached != null && againAge < config.htmlCacheTimeoutMs) || recentlyForced
             
+            if (requestFreshAgain) {
+                return againCached!!
+            }
+
             logger.info("Fetching fresh course list from {}", config.url)
             val result = webClient.get()
                 .uri(config.url)
@@ -81,9 +82,23 @@ class MiamiClient(private val webClient: WebClient, private val config: MiamiCon
         }
     }
 
-    suspend fun getToken(): String {
-        val html = getCourseList()
+    suspend fun getToken(forceFresh: Boolean = false): String {
+        val html = getCourseList(forceFresh)
         return tokenRegex.find(html)?.groupValues?.get(1) ?: ""
+    }
+
+    suspend fun forceFetchToken(): String = tokenLock.withLock {
+        val againNow = System.currentTimeMillis()
+        if (lastToken != null && (againNow - lastTokenTs) < 5000) {
+            // Already refreshed by another concurrent request
+            return lastToken!!
+        }
+        val freshToken = getToken(forceFresh = true)
+        if (freshToken.isNotEmpty()) {
+            lastToken = freshToken
+            lastTokenTs = System.currentTimeMillis()
+        }
+        return freshToken
     }
 
     suspend fun getOrFetchToken(): String {
@@ -91,7 +106,7 @@ class MiamiClient(private val webClient: WebClient, private val config: MiamiCon
         val cached = lastToken
         val age = now - lastTokenTs
 
-        val inWindow = cached != null && age >= refreshThreshold && age < config.tokenTimeoutMs
+        val inWindow = cached != null && age >= config.tokenRefreshThresholdMs && age < config.tokenTimeoutMs
         if (inWindow) {
             val currentJob = refreshJob
             val jobNotActive = currentJob == null || !currentJob.isActive
@@ -123,7 +138,7 @@ class MiamiClient(private val webClient: WebClient, private val config: MiamiCon
     suspend fun postResultResponse(formBody: String): HttpTextResponse {
         val postResponse = getPostResponse(formBody)
         var resultHtml = postResponse.body ?: ""
-        
+
         val hasRedirect = resultHtml.contains("meta http-equiv=\"refresh\"")
         if (hasRedirect) {
             val redirectUrl = """content=\s*"\s*\d+;\s*url='([^']+)'\s*""""
@@ -150,7 +165,7 @@ class MiamiClient(private val webClient: WebClient, private val config: MiamiCon
         activeRequests.incrementAndGet()
 
         return try {
-            kotlinx.coroutines.withTimeout(28_000L) {
+            kotlinx.coroutines.withTimeout(config.requestTimeoutMs) {
                 webClient.post()
                     .uri(config.url)
                     .header("Accept", "text/html")

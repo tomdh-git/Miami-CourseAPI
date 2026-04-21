@@ -1,4 +1,4 @@
-package com.example.courseapi.course
+package com.example.courseapi.course.model
 
 sealed interface CourseResult
 data class SuccessCourse(val courses: List<Course>) : CourseResult

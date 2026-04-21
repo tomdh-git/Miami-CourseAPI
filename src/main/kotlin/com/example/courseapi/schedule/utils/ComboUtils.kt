@@ -1,17 +1,11 @@
-package com.example.courseapi.schedule
+package com.example.courseapi.schedule.utils
 
-import com.example.courseapi.course.Course
-import com.example.courseapi.course.CourseByInfoInput
-import com.example.courseapi.schedule.ScheduleByCourseInput
-import com.example.courseapi.schedule.Schedule
-import com.example.courseapi.schools.miami.MiamiCourseRepo
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.coroutineScope
+import com.example.courseapi.course.model.Course
+import com.example.courseapi.schedule.model.Schedule
 
 fun generateValidSchedules(courseGroups: List<List<Course>>, preferredStartMin: Int, preferredEndMin: Int, optimizeFreeTime: Boolean = false, maxResults: Int = 100): List<Schedule> {
     if (courseGroups.isEmpty()) return emptyList()
-    
+
     val processedGroups = courseGroups.map { group ->
         group.mapNotNull { course ->
             val intervals = parseTimeSlot(course.delivery).toList()
@@ -40,10 +34,10 @@ fun generateValidSchedules(courseGroups: List<List<Course>>, preferredStartMin: 
         null
     }
     val listResults = if (!optimizeFreeTime) ArrayList<Schedule>() else null
-    
+
     val currentCourses = ArrayList<Course>(courseGroups.size)
     val currentIntervals = ArrayList<Interval>()
-    
+
     backtrack(
         0,
         currentCourses,
@@ -54,13 +48,13 @@ fun generateValidSchedules(courseGroups: List<List<Course>>, preferredStartMin: 
         maxResults,
         optimizeFreeTime
     )
-    
+
     val finalResults = if (optimizeFreeTime) {
         results!!.sortedByDescending { it.freeTime }
     } else {
         listResults!!
     }
-    
+
     return finalResults
 }
 
@@ -132,7 +126,7 @@ private fun backtrack(index: Int, currentCourses: MutableList<Course>, currentIn
     }
 }
 
-fun getCompatibleCourse(attributesList: List<Course>,startMin: Int, endMin: Int, existingIntervalsByDay: MutableMap<Day, MutableList<Interval>>): List<Course>{
+fun getCompatibleCourse(attributesList: List<Course>, startMin: Int, endMin: Int, existingIntervalsByDay: MutableMap<Day, MutableList<Interval>>): List<Course> {
     return attributesList.filter { filler ->
         val ivs = parseTimeSlot(filler.delivery).toList()
         if (ivs.isEmpty()) return@filter true
@@ -150,7 +144,7 @@ fun getCompatibleCourse(attributesList: List<Course>,startMin: Int, endMin: Int,
     }
 }
 
-fun getExistingIntervalsByDay(s: Schedule): MutableMap<Day, MutableList<Interval>>{
+fun getExistingIntervalsByDay(s: Schedule): MutableMap<Day, MutableList<Interval>> {
     val existingIntervalsByDay = mutableMapOf<Day, MutableList<Interval>>()
     for (c in s.courses) {
         for (iv in parseTimeSlot(c.delivery)) {
@@ -160,7 +154,7 @@ fun getExistingIntervalsByDay(s: Schedule): MutableMap<Day, MutableList<Interval
     return existingIntervalsByDay
 }
 
-fun getBestFit(compatible: List<Course>, s: Schedule, startMin: Int, endMin: Int): Course{
+fun getBestFit(compatible: List<Course>, s: Schedule, startMin: Int, endMin: Int): Course {
     return compatible.maxByOrNull { filler ->
         val newCourses = s.courses + filler
         val newSchedule = Schedule(
@@ -193,5 +187,3 @@ fun addFillerCourse(schedule: Schedule, attributesList: List<Course>, startMin: 
     )
     return schedule.copy(courses = schedule.courses + best)
 }
-
-

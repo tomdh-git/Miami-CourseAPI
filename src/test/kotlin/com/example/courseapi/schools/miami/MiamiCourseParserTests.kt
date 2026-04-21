@@ -1,5 +1,6 @@
 package com.example.courseapi.schools.miami
 
+import com.example.courseapi.schools.miami.parser.MiamiCourseParser
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 

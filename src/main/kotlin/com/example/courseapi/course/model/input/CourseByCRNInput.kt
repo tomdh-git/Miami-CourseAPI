@@ -1,4 +1,4 @@
-package com.example.courseapi.course
+package com.example.courseapi.course.model.input
 
 data class CourseByCRNInput(
     val school: String = "miami",

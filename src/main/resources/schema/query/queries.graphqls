@@ -1,0 +1,42 @@
+"""
+Query root for the CourseAPI.
+All queries require a school identifier to route to the correct data source.
+"""
+type Query {
+    """
+    Search for courses by various filters (subject, term, campus, etc.)
+    Returns a union of success/error result.
+    """
+    getCourseByInfo(
+        input: CourseByInfoInput!
+        limit: Int = 100
+    ): CourseResult!
+
+    """
+    Look up a specific course by its CRN (Course Reference Number).
+    """
+    getCourseByCRN(
+        input: CourseByCRNInput!
+    ): CourseResult!
+
+    """
+    Generate non-conflicting schedule combinations from a list of courses.
+    """
+    getScheduleByCourses(
+        input: ScheduleByCourseInput!
+        limit: Int = 100
+    ): ScheduleResult!
+
+    """
+    Find filler courses matching specific attributes that fit into existing schedules.
+    """
+    getFillerByAttributes(
+        input: FillerByAttributesInput!
+        limit: Int = 100
+    ): ScheduleResult!
+
+    """
+    Get available academic terms for a given school.
+    """
+    getTerms(school: String! = "miami"): FieldResult!
+}

@@ -1,4 +1,4 @@
-package com.example.courseapi.client
+package com.example.courseapi.infra
 
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration

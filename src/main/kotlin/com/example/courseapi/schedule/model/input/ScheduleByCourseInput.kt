@@ -1,4 +1,4 @@
-package com.example.courseapi.schedule
+package com.example.courseapi.schedule.model.input
 
 data class ScheduleByCourseInput(
     val school: String = "miami",
@@ -6,7 +6,7 @@ data class ScheduleByCourseInput(
     val courses: List<String>,
     val campus: List<String>,
     val term: String,
-    val optimizeFreeTime: Boolean?=false,
+    val optimizeFreeTime: Boolean? = false,
     val preferredStart: String? = null,
     val preferredEnd: String? = null
 )

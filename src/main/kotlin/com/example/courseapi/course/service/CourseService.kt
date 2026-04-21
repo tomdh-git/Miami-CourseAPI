@@ -1,7 +1,11 @@
-package com.example.courseapi.course
+package com.example.courseapi.course.service
 
-import com.example.courseapi.exceptions.*
+import com.example.courseapi.course.api.CourseValidator
+import com.example.courseapi.course.model.Course
+import com.example.courseapi.course.model.input.CourseByCRNInput
+import com.example.courseapi.course.model.input.CourseByInfoInput
 import com.example.courseapi.config.SchoolRegistry
+import com.example.courseapi.exceptions.QueryException
 import org.springframework.stereotype.Service
 
 @Service

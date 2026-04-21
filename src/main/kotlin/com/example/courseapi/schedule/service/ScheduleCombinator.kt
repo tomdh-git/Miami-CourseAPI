@@ -1,9 +1,15 @@
-package com.example.courseapi.schedule
+package com.example.courseapi.schedule.service
 
 import com.example.courseapi.config.SchoolConnector
-import com.example.courseapi.course.Course
-import com.example.courseapi.course.CourseByInfoInput
+import com.example.courseapi.course.model.Course
+import com.example.courseapi.course.model.input.CourseByInfoInput
 import com.example.courseapi.exceptions.QueryException
+import com.example.courseapi.schedule.model.Schedule
+import com.example.courseapi.schedule.model.input.FillerByAttributesInput
+import com.example.courseapi.schedule.model.input.ScheduleByCourseInput
+import com.example.courseapi.schedule.utils.generateValidSchedules
+import com.example.courseapi.schedule.utils.toMinutes
+import com.example.courseapi.schedule.utils.addFillerCourse
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
@@ -12,7 +18,7 @@ import org.springframework.stereotype.Component
 @Component
 class ScheduleCombinator(private val cache: FillerAttributeCache) {
 
-    private fun parseCourses(courses: List<String>): List<Pair<String,String>>{
+    private fun parseCourses(courses: List<String>): List<Pair<String, String>> {
         return courses.mapNotNull {
             val p = it.trim().split(" ")
             if (p.size == 2) p[0] to p[1] else null
@@ -23,20 +29,20 @@ class ScheduleCombinator(private val cache: FillerAttributeCache) {
         val parsedCourses = parseCourses(input.courses)
         val fetched = fetchCourses(parsedCourses, input, connector)
         val valid = fetched.filterValues { it.isNotEmpty() }
-        
+
         val uniqueParsedCount = parsedCourses.toSet().size
         if (valid.size < uniqueParsedCount) {
-             throw QueryException("Could not find valid sections for all requested courses")
+            throw QueryException("Could not find valid sections for all requested courses")
         }
-        
+
         if (valid.isEmpty()) throw QueryException("No valid schedules found")
-        
+
         val startMin = toMinutes(input.preferredStart ?: "12:00am")
         val endMin = toMinutes(input.preferredEnd ?: "11:59pm")
-        
+
         val schedules = generateValidSchedules(
-            valid.values.toList(), 
-            startMin, 
+            valid.values.toList(),
+            startMin,
             endMin,
             optimizeFreeTime = input.optimizeFreeTime == true,
             maxResults = 100
@@ -54,13 +60,13 @@ class ScheduleCombinator(private val cache: FillerAttributeCache) {
 
         val startMin = toMinutes(input.preferredStart ?: "12:00am")
         val endMin = toMinutes(input.preferredEnd ?: "11:59pm")
-        
+
         schedules.map { schedule ->
             addFillerCourse(schedule, attributesList, startMin, endMin)
         }
     }
-    
-    private suspend fun fetchCourses(parsed: List<Pair<String,String>>, input: ScheduleByCourseInput, connector: SchoolConnector): Map<Pair<String, String>, List<Course>> = coroutineScope{
+
+    private suspend fun fetchCourses(parsed: List<Pair<String, String>>, input: ScheduleByCourseInput, connector: SchoolConnector): Map<Pair<String, String>, List<Course>> = coroutineScope {
         return@coroutineScope parsed.map { (subject, num) ->
             async {
                 val sections = connector.getCourseByInfo(

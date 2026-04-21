@@ -1,0 +1,20 @@
+"""
+A metadata field (e.g. an academic term, campus, or subject code).
+"""
+type Field {
+    name: String!
+}
+
+"""
+Union result type for field/metadata queries.
+"""
+union FieldResult = SuccessField | ErrorField
+
+type SuccessField {
+    fields: [Field!]!
+}
+
+type ErrorField {
+    error: String!
+    message: String!
+}

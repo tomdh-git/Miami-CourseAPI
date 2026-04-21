@@ -1,5 +1,6 @@
-package com.example.courseapi.client
+package com.example.courseapi.infra
 
+import com.example.courseapi.schools.miami.MiamiConfig
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.web.reactive.function.client.WebClient
@@ -12,15 +13,15 @@ import java.time.Duration
 import java.util.concurrent.TimeUnit
 
 @Configuration
-class HttpClientConfig {
+class HttpClientConfig(private val miamiConfig: MiamiConfig) {
     @Bean
     fun webClient(builder: WebClient.Builder): WebClient {
         val httpClient = HttpClient.create()
-            .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 30_000)
-            .responseTimeout(Duration.ofMillis(60_000))
+            .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, miamiConfig.connectTimeoutMs)
+            .responseTimeout(Duration.ofSeconds(miamiConfig.readWriteTimeoutSec))
             .doOnConnected { conn ->
-                conn.addHandlerLast(ReadTimeoutHandler(60, TimeUnit.SECONDS))
-                conn.addHandlerLast(WriteTimeoutHandler(60, TimeUnit.SECONDS))
+                conn.addHandlerLast(ReadTimeoutHandler(miamiConfig.readWriteTimeoutSec, TimeUnit.SECONDS))
+                conn.addHandlerLast(WriteTimeoutHandler(miamiConfig.readWriteTimeoutSec, TimeUnit.SECONDS))
             }
             .followRedirect(true)
 

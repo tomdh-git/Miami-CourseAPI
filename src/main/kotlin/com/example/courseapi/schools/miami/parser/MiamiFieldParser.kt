@@ -1,64 +1,49 @@
-package com.example.courseapi.schools.miami
+package com.example.courseapi.schools.miami.parser
 
-import com.example.courseapi.field.Field
-import com.example.courseapi.field.ValidFields
+import com.example.courseapi.config.FieldParser
+import com.example.courseapi.field.model.Field
+import com.example.courseapi.field.model.ValidFields
 import org.jsoup.Jsoup
+import org.springframework.stereotype.Component
 
-fun parseTerms(html: String): List<Field> {
-    val doc = Jsoup.parse(html)
-    return doc.select("select#termFilter option[value]").map { opt ->
-        Field(opt.attr("value").trim())
-    }
-}
+@Component
+class MiamiFieldParser : FieldParser {
 
-fun parseAllFields(html: String): Map<String, List<Field>> {
-    val doc = Jsoup.parse(html)
-    val result = mutableMapOf<String, List<Field>>()
-    result["attributes"] = doc.select("select#sectionFilterAttributes option[value]").map { opt ->
-        Field(opt.attr("value").trim())
+    override fun parseTerms(raw: String): List<Field> {
+        val doc = Jsoup.parse(raw)
+        return doc.select("select#termFilter option[value]").map { opt ->
+            Field(opt.attr("value").trim())
+        }
     }
-    result["terms"] = doc.select("select#termFilter option[value]").map { opt ->
-        Field(opt.attr("value").trim())
-    }
-    result["delivery"] = doc.select("input.deliveryTypeCheckBox[value]").map { input ->
-        Field(input.attr("value").trim())
-    }.filter { it.name.isNotEmpty() }
-    result["campuses"] = doc.select("select#campusFilter option[value]").map { opt ->
-        Field(opt.attr("value").trim())
-    }.filter { it.name.isNotEmpty() }
-    result["subjects"] = doc.select("select#subject option[value]").map { opt ->
-        Field(opt.attr("value").trim())
-    }.filter { it.name.isNotEmpty() }
-    result["waitlist"] = doc.select("select#openWaitlist option[value]").map { opt ->
-        Field(opt.attr("value").trim())
-    }
-    result["levels"] = doc.select("select#levelFilter option[value]").map { opt ->
-        Field(opt.attr("value").trim())
-    }
-    result["days"] = doc.select("select#daysFilter option[value]").map { opt ->
-        Field(opt.attr("value").trim())
-    }
-    return result
-}
 
-fun getValidFields(allFields: Map<String,List<Field>>): ValidFields{
-    val subjects = allFields["subjects"]?.map { it.name }?.toSet() ?: emptySet()
-    val campuses = allFields["campuses"]?.map { it.name }?.toSet() ?: emptySet()
-    val terms = allFields["terms"]?.map { it.name }?.toSet() ?: emptySet()
-    val deliveryTypes = allFields["delivery"]?.map { it.name }?.toSet() ?: emptySet()
-    val levels = allFields["levels"]?.map { it.name }?.toSet() ?: emptySet()
-    val days = allFields["days"]?.map { it.name }?.toSet() ?: emptySet()
-    val waitlistTypes = allFields["waitlist"]?.map { it.name }?.toSet() ?: emptySet()
-    val attributes = allFields["attributes"]?.map { it.name }?.toSet() ?: emptySet()
-    val fields = ValidFields(
-        subjects = subjects,
-        campuses = campuses,
-        terms = terms,
-        deliveryTypes = deliveryTypes,
-        levels = levels,
-        days = days,
-        waitlistTypes = waitlistTypes,
-        attributes = attributes
-    )
-    return fields
+    override fun parseAllFields(raw: String): ValidFields {
+        val doc = Jsoup.parse(raw)
+        val subjects = doc.select("select#subject option[value]")
+            .map { it.attr("value").trim() }.filter { it.isNotEmpty() }.toSet()
+        val campuses = doc.select("select#campusFilter option[value]")
+            .map { it.attr("value").trim() }.filter { it.isNotEmpty() }.toSet()
+        val terms = doc.select("select#termFilter option[value]")
+            .map { it.attr("value").trim() }.toSet()
+        val deliveryTypes = doc.select("input.deliveryTypeCheckBox[value]")
+            .map { it.attr("value").trim() }.filter { it.isNotEmpty() }.toSet()
+        val levels = doc.select("select#levelFilter option[value]")
+            .map { it.attr("value").trim() }.toSet()
+        val days = doc.select("select#daysFilter option[value]")
+            .map { it.attr("value").trim() }.toSet()
+        val waitlistTypes = doc.select("select#openWaitlist option[value]")
+            .map { it.attr("value").trim() }.toSet()
+        val attributes = doc.select("select#sectionFilterAttributes option[value]")
+            .map { it.attr("value").trim() }.toSet()
+
+        return ValidFields(
+            subjects = subjects,
+            campuses = campuses,
+            terms = terms,
+            deliveryTypes = deliveryTypes,
+            levels = levels,
+            days = days,
+            waitlistTypes = waitlistTypes,
+            attributes = attributes
+        )
+    }
 }

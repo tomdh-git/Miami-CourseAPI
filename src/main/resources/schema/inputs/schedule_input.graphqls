@@ -1,0 +1,27 @@
+"""
+Input for generating schedule combinations from a course list.
+"""
+input ScheduleByCourseInput {
+    school: String! = "miami"
+    delivery: [String]
+    courses: [String!]!
+    campus: [String!]!
+    term: String!
+    optimizeFreeTime: Boolean
+    preferredStart: String
+    preferredEnd: String
+}
+
+"""
+Input for finding filler courses that match attributes and fit into existing schedules.
+"""
+input FillerByAttributesInput {
+    school: String! = "miami"
+    delivery: [String]
+    attributes: [String!]!
+    courses: [String!]!
+    campus: [String!]!
+    term: String!
+    preferredStart: String
+    preferredEnd: String
+}

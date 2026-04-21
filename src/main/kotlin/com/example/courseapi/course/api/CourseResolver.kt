@@ -1,65 +1,54 @@
-package com.example.courseapi.course
+package com.example.courseapi.course.api
 
-import org.springframework.graphql.data.method.annotation.*
-import org.springframework.stereotype.Controller
-import org.springframework.web.bind.annotation.CrossOrigin
+import com.example.courseapi.course.model.CourseResult
+import com.example.courseapi.course.model.ErrorCourse
+import com.example.courseapi.course.model.SuccessCourse
+import com.example.courseapi.course.model.input.CourseByCRNInput
+import com.example.courseapi.course.model.input.CourseByInfoInput
+import com.example.courseapi.course.service.CourseService
+import com.example.courseapi.exceptions.APIException
+import com.example.courseapi.exceptions.QueryException
+import com.example.courseapi.exceptions.ServerBusyException
+import com.netflix.graphql.dgs.DgsComponent
+import com.netflix.graphql.dgs.DgsQuery
+import com.netflix.graphql.dgs.InputArgument
+import org.slf4j.LoggerFactory
 
-/**
- * todo:
- * - you need to find out a way to get the description of a course and display it well on the frontend
- * - you need to also add getCourseByAttribute
- * - honors toggle
- * -
- */
-
- 
-
-@Controller
-@CrossOrigin(origins = ["*"])
+@DgsComponent
 class CourseResolver(private val service: CourseService) {
+    private val logger = LoggerFactory.getLogger(CourseResolver::class.java)
 
-    /**
-     * async function getCourseByInfo
-     * @param input: CourseByInfoInput (DTO)
-     * @return CourseResult
-     *      CourseSuccess: List<Course>
-     *      @throws: CourseError
-     *
-     * @description
-     * calls safe wrapped getCourseByInfo in CourseService
-     *
-     * @example
-     * query{getCourseByInfo(input:{}){... on SuccessCourse{courses{}}... on ErrorCourse{error,message}}}
-     * */
-    @QueryMapping
-    suspend fun getCourseByInfo(@Argument input: CourseByInfoInput): CourseResult {
+    @DgsQuery
+    suspend fun getCourseByInfo(
+        @InputArgument input: CourseByInfoInput,
+        @InputArgument limit: Int?
+    ): CourseResult {
         return runCatching { service.getCourseByInfo(input) }
             .fold(
-                onSuccess = { SuccessCourse(it) },
-                onFailure = { ErrorCourse(it.javaClass.simpleName, it.message ?: "Unknown error") }
+                onSuccess = { SuccessCourse(it.take(limit ?: 100)) },
+                onFailure = { handleError(it) }
             )
     }
 
-    /**
-     * async function getCourseByInfo
-     * @param input: CourseByCRNInput (DTO)
-     * @return: CourseResult
-     *      CourseSuccess: List<Course>
-     *      @throws: CourseError
-     *
-     * @description
-     * calls safe wrapped getCourseByCRN in CourseService
-     *
-     * @example
-     * query{getCourseByCRN(input:{}){... on SuccessCourse{courses{}}... on ErrorCourse{error,message}}}
-     * */
-    @QueryMapping
-    suspend fun getCourseByCRN(@Argument input: CourseByCRNInput): CourseResult {
+    @DgsQuery
+    suspend fun getCourseByCRN(@InputArgument input: CourseByCRNInput): CourseResult {
         return runCatching { service.getCourseByCRN(input) }
             .fold(
                 onSuccess = { SuccessCourse(it) },
-                onFailure = { ErrorCourse(it.javaClass.simpleName, it.message ?: "Unknown error") }
+                onFailure = { handleError(it) }
             )
     }
-}
 
+    private fun handleError(e: Throwable): ErrorCourse {
+        return when (e) {
+            is IllegalArgumentException -> ErrorCourse("VALIDATION_ERROR", e.message ?: "Invalid input")
+            is QueryException -> ErrorCourse("QUERY_ERROR", e.message ?: "Query error")
+            is APIException -> ErrorCourse("API_ERROR", e.message ?: "Upstream API error")
+            is ServerBusyException -> ErrorCourse("SERVER_BUSY", e.message ?: "Server is busy")
+            else -> {
+                logger.error("Unexpected error in CourseResolver", e)
+                ErrorCourse("INTERNAL_ERROR", "An unexpected error occurred")
+            }
+        }
+    }
+}

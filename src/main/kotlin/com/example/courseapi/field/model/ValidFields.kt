@@ -1,4 +1,4 @@
-package com.example.courseapi.field
+package com.example.courseapi.field.model
 
 data class ValidFields(
     val subjects: Set<String>,

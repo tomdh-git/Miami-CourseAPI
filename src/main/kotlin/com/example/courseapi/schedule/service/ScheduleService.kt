@@ -1,9 +1,10 @@
-package com.example.courseapi.schedule
+package com.example.courseapi.schedule.service
 
-import com.example.courseapi.schedule.FillerByAttributesInput
-import com.example.courseapi.schedule.ScheduleByCourseInput
-import com.example.courseapi.schedule.Schedule
+import com.example.courseapi.schedule.model.Schedule
+import com.example.courseapi.schedule.model.input.FillerByAttributesInput
+import com.example.courseapi.schedule.model.input.ScheduleByCourseInput
 import com.example.courseapi.config.SchoolRegistry
+import com.example.courseapi.schedule.api.ScheduleValidator
 import org.springframework.stereotype.Service
 
 @Service

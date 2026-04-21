@@ -1,4 +1,4 @@
-package com.example.courseapi.field
+package com.example.courseapi.field.model
 
 sealed interface FieldResult
 data class SuccessField(val fields: List<Field>) : FieldResult

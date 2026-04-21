@@ -1,6 +1,6 @@
-package com.example.courseapi.schools.miami
+package com.example.courseapi.schools.miami.client
 
-import com.example.courseapi.course.CourseByInfoInput
+import com.example.courseapi.course.model.input.CourseByInfoInput
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 

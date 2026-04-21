@@ -1,8 +1,7 @@
-package com.example.courseapi.schedule
+package com.example.courseapi.schedule.utils
 
-import com.example.courseapi.course.Course
-import com.example.courseapi.schedule.Schedule
-import kotlin.text.iterator
+import com.example.courseapi.course.model.Course
+import com.example.courseapi.schedule.model.Schedule
 
 val timeSlotRegex = Regex(
     """([MTWRFSU]+)\s+(\d{1,2}:\d{2}[ap]m)-(\d{1,2}:\d{2}[ap]m)""",

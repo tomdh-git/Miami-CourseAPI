@@ -1,4 +1,5 @@
-package com.example.courseapi.client
+package com.example.courseapi.infra
+
 import org.springframework.boot.web.context.WebServerInitializedEvent
 import org.springframework.context.ApplicationListener
 import org.springframework.stereotype.Component

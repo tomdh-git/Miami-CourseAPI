@@ -1,0 +1,30 @@
+"""
+A course section offered at a university.
+"""
+type Course {
+    subject: String!
+    courseNum: String!
+    title: String!
+    section: String!
+    crn: Int!
+    campus: String!
+    credits: Int!
+    capacity: String!
+    requests: String!
+    delivery: String!
+}
+
+"""
+Union result type for course queries.
+Consumers should use inline fragments to handle both success and error cases.
+"""
+union CourseResult = SuccessCourse | ErrorCourse
+
+type SuccessCourse {
+    courses: [Course!]!
+}
+
+type ErrorCourse {
+    error: String!
+    message: String!
+}

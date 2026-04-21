@@ -2,6 +2,10 @@ package com.example.courseapi.course
 
 import com.example.courseapi.config.SchoolConnector
 import com.example.courseapi.config.SchoolRegistry
+import com.example.courseapi.course.api.CourseValidator
+import com.example.courseapi.course.model.Course
+import com.example.courseapi.course.model.input.CourseByCRNInput
+import com.example.courseapi.course.service.CourseService
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test

@@ -1,22 +1,34 @@
-package com.example.courseapi.field
+package com.example.courseapi.field.api
 
-import org.springframework.graphql.data.method.annotation.QueryMapping
-import org.springframework.stereotype.Controller
-import org.springframework.web.bind.annotation.CrossOrigin
+import com.example.courseapi.exceptions.APIException
+import com.example.courseapi.field.model.ErrorField
+import com.example.courseapi.field.model.FieldResult
+import com.example.courseapi.field.model.SuccessField
+import com.example.courseapi.field.service.FieldService
+import com.netflix.graphql.dgs.DgsComponent
+import com.netflix.graphql.dgs.DgsQuery
+import com.netflix.graphql.dgs.InputArgument
+import org.slf4j.LoggerFactory
 
-import org.springframework.graphql.data.method.annotation.Argument
- 
+@DgsComponent
+class FieldResolver(private val service: FieldService) {
+    private val logger = LoggerFactory.getLogger(FieldResolver::class.java)
 
-@Controller
-@CrossOrigin(origins = ["*"])
-class FieldResolver(private val service: FieldService){
-    
-    @QueryMapping
-    suspend fun getTerms(@Argument school: String): FieldResult {
+    @DgsQuery
+    suspend fun getTerms(@InputArgument school: String): FieldResult {
         return runCatching { service.getTerms(school) }
             .fold(
                 onSuccess = { SuccessField(it) },
-                onFailure = { ErrorField(it.javaClass.simpleName, it.message ?: "Unknown error") }
+                onFailure = { e ->
+                    when (e) {
+                        is IllegalArgumentException -> ErrorField("VALIDATION_ERROR", e.message ?: "Invalid input")
+                        is APIException -> ErrorField("API_ERROR", e.message ?: "Upstream API error")
+                        else -> {
+                            logger.error("Unexpected error in FieldResolver", e)
+                            ErrorField("INTERNAL_ERROR", "An unexpected error occurred")
+                        }
+                    }
+                }
             )
     }
 }

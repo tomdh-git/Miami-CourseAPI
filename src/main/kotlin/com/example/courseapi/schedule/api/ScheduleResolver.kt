@@ -1,58 +1,57 @@
-package com.example.courseapi.schedule
+package com.example.courseapi.schedule.api
 
-import org.springframework.graphql.data.method.annotation.Argument
-import org.springframework.graphql.data.method.annotation.QueryMapping
-import org.springframework.stereotype.Controller
-import org.springframework.web.bind.annotation.CrossOrigin
+import com.example.courseapi.exceptions.APIException
+import com.example.courseapi.exceptions.QueryException
+import com.example.courseapi.exceptions.ServerBusyException
+import com.example.courseapi.schedule.model.ErrorSchedule
+import com.example.courseapi.schedule.model.ScheduleResult
+import com.example.courseapi.schedule.model.SuccessSchedule
+import com.example.courseapi.schedule.model.input.FillerByAttributesInput
+import com.example.courseapi.schedule.model.input.ScheduleByCourseInput
+import com.example.courseapi.schedule.service.ScheduleService
+import com.netflix.graphql.dgs.DgsComponent
+import com.netflix.graphql.dgs.DgsQuery
+import com.netflix.graphql.dgs.InputArgument
+import org.slf4j.LoggerFactory
 
- 
+@DgsComponent
+class ScheduleResolver(private val scheduleService: ScheduleService) {
+    private val logger = LoggerFactory.getLogger(ScheduleResolver::class.java)
 
-@Controller
-@CrossOrigin(origins = ["*"])
-class ScheduleResolver(private val ss: ScheduleService) {
-
-    /**
-     * async function getScheduleByCourses
-     * @param input: ScheduleByCourseInput (DTO)
-     * @return ScheduleResult
-     *      SuccessSchedule: List<Schedule>
-     *      @throws: ErrorSchedule
-     *
-     * @description
-     * calls safe wrapped getScheduleByCourses in ScheduleService
-     *
-     * @example
-     * query{getScheduleByCourses(input:{}){... on SuccessSchedule{schedules:{}}... on ErrorSchedule{error,message}}}
-     * */
-    @QueryMapping
-    suspend fun getScheduleByCourses(@Argument input: ScheduleByCourseInput): ScheduleResult {
-        return runCatching { ss.getScheduleByCourses(input) }
+    @DgsQuery
+    suspend fun getScheduleByCourses(
+        @InputArgument input: ScheduleByCourseInput,
+        @InputArgument limit: Int?
+    ): ScheduleResult {
+        return runCatching { scheduleService.getScheduleByCourses(input) }
             .fold(
-                onSuccess = { SuccessSchedule(it) },
-                onFailure = { ErrorSchedule(it.javaClass.simpleName, it.message ?: "Unknown error") }
+                onSuccess = { SuccessSchedule(it.take(limit ?: 100)) },
+                onFailure = { handleError(it) }
             )
     }
 
-    /**
-     * async function getFillerByAttributes
-     * @param input: FillerByAttributesInput (DTO)
-     * @return ScheduleResult
-     *      SuccessSchedule: List<Schedule>
-     *      @throws: ErrorSchedule
-     *
-     * @description
-     * calls safe wrapped getFillerByAttributes in ScheduleService
-     *
-     * @example
-     * query{getFillerByAttributes(input:{}){... on SuccessSchedule{schedules:{}}... on ErrorSchedule{error,message}}}
-     * */
-    @QueryMapping
-    suspend fun getFillerByAttributes(@Argument input: FillerByAttributesInput): ScheduleResult {
-        return runCatching { ss.getFillerByAttributes(input) }
+    @DgsQuery
+    suspend fun getFillerByAttributes(
+        @InputArgument input: FillerByAttributesInput,
+        @InputArgument limit: Int?
+    ): ScheduleResult {
+        return runCatching { scheduleService.getFillerByAttributes(input) }
             .fold(
-                onSuccess = { SuccessSchedule(it) },
-                onFailure = { ErrorSchedule(it.javaClass.simpleName, it.message ?: "Unknown error") }
+                onSuccess = { SuccessSchedule(it.take(limit ?: 100)) },
+                onFailure = { handleError(it) }
             )
     }
 
+    private fun handleError(e: Throwable): ErrorSchedule {
+        return when (e) {
+            is IllegalArgumentException -> ErrorSchedule("VALIDATION_ERROR", e.message ?: "Invalid input")
+            is QueryException -> ErrorSchedule("QUERY_ERROR", e.message ?: "Query error")
+            is APIException -> ErrorSchedule("API_ERROR", e.message ?: "Upstream API error")
+            is ServerBusyException -> ErrorSchedule("SERVER_BUSY", e.message ?: "Server is busy")
+            else -> {
+                logger.error("Unexpected error in ScheduleResolver", e)
+                ErrorSchedule("INTERNAL_ERROR", "An unexpected error occurred")
+            }
+        }
+    }
 }

@@ -1,6 +1,8 @@
 package com.example.courseapi.schedule
 
-import com.example.courseapi.course.Course
+import com.example.courseapi.course.model.Course
+import com.example.courseapi.schedule.utils.generateValidSchedules
+import com.example.courseapi.schedule.utils.toMinutes
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 

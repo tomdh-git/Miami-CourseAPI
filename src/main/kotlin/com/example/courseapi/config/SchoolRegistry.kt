@@ -9,4 +9,6 @@ class SchoolRegistry(connectors: List<SchoolConnector>) {
     fun getConnector(schoolId: String): SchoolConnector {
         return map[schoolId] ?: throw IllegalArgumentException("Unknown school ID: $schoolId")
     }
+
+    fun getAllConnectors(): Collection<SchoolConnector> = map.values
 }

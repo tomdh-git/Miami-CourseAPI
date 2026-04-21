@@ -18,29 +18,42 @@ repositories {
     mavenCentral()
 }
 
+dependencyManagement {
+    imports {
+        mavenBom("com.netflix.graphql.dgs:graphql-dgs-platform-dependencies:9.1.2")
+    }
+}
+
 dependencies {
-    implementation("org.springframework.boot:spring-boot-starter-graphql")
+    // GraphQL - Netflix DGS
+    implementation("com.netflix.graphql.dgs:graphql-dgs-spring-graphql-starter")
+
+    // Web
     implementation("org.springframework.boot:spring-boot-starter-web")
+    implementation("org.springframework.boot:spring-boot-starter-webflux")
+
+    // Kotlin
     implementation("org.jetbrains.kotlin:kotlin-reflect")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor:1.8.1")
     implementation("org.springframework.data:spring-data-commons")
-    
+
     // Caching
     implementation("org.springframework.boot:spring-boot-starter-cache")
     implementation("com.github.ben-manes.caffeine:caffeine")
 
-    // HTML parsing
+    // HTML Parsing
     implementation("org.jsoup:jsoup:1.17.2")
 
+    // Actuator
+    implementation("org.springframework.boot:spring-boot-starter-actuator")
 
-
-    implementation("org.springframework.boot:spring-boot-starter-webflux")
-
+    // Testing
     testImplementation("org.mockito.kotlin:mockito-kotlin:3.2.0")
     testImplementation(kotlin("test"))
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("io.mockk:mockk:1.13.13")
+    testImplementation("com.netflix.graphql.dgs:graphql-dgs-spring-graphql-starter-test")
 }
 
 tasks.withType<Test> {

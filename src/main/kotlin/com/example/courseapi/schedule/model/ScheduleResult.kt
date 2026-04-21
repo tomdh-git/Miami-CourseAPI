@@ -1,4 +1,4 @@
-package com.example.courseapi.schedule
+package com.example.courseapi.schedule.model
 
 sealed interface ScheduleResult
 data class SuccessSchedule(val schedules: List<Schedule>) : ScheduleResult

@@ -1,46 +1,38 @@
-package com.example.courseapi.schools.miami
+package com.example.courseapi.schools.miami.parser
 
-import com.example.courseapi.course.Course
+import com.example.courseapi.config.CourseParser
+import com.example.courseapi.course.model.Course
 import org.jsoup.Jsoup
-import org.jsoup.select.Elements
 import org.springframework.stereotype.Component
 
 @Component
-class MiamiCourseParser {
-    private val digitRegex = Regex("\\d+")
+class MiamiCourseParser : CourseParser {
 
-    fun parseCourses(html: String): List<Course> {
-        val doc = Jsoup.parse(html)
+    override fun parseCourses(raw: String): List<Course> {
+        val doc = Jsoup.parse(raw)
         val rows = doc.select("tr.resultrow")
-        val list = ArrayList<Course>(rows.size)
-        return populateCourses(list,rows)
-    }
-
-    private fun populateCourses(list: ArrayList<Course>, rows: Elements): List<Course> {
-        for (tr in rows) {
-            val tds = tr.select("td")
-            if (tds.size < 9) continue
-
-            val subject = tds[0].ownText().trim()
-            if (subject.isEmpty()) continue
-
-            val courseNum = tds[1].text().trim()
-            val title = tds[2].text().trim()
-            val section = tds[3].text().trim()
-            val crn = digitRegex.find(tds[4].text())?.value?.toIntOrNull() ?: 0
-            val campus = tds[5].text().trim()
-            val credits = digitRegex.find(tds[6].text())?.value?.toIntOrNull() ?: 0
-            val capacity = tds[7].text().trim()
-            val requests = tds[8].text().trim()
-            val delivery = tds.getOrNull(9)?.text()?.trim() ?: ""
-
-            list.add(
-                Course(
-                    subject, courseNum, title, section, crn,
-                    campus, credits, capacity, requests, delivery
-                )
+        return rows.mapNotNull { row ->
+            val cells = row.select("td")
+            if (cells.size < 9) return@mapNotNull null
+            
+            val subject = cells[0].ownText().trim()
+            val courseNum = cells[1].text().trim().toIntOrNull() ?: 0
+            val title = cells[2].text().trim()
+            
+            if (subject.isEmpty() && courseNum == 0 && title.isEmpty()) return@mapNotNull null
+            
+            Course(
+                subject = subject,
+                courseNum = courseNum.toString(),
+                title = title,
+                section = cells[3].text().trim(),
+                crn = cells[4].text().trim().filter { it.isDigit() }.toIntOrNull() ?: 0,
+                campus = cells[5].text().trim(),
+                credits = cells[6].text().trim().toIntOrNull() ?: 0,
+                capacity = cells[7].text().trim(),
+                requests = cells[8].text().trim(),
+                delivery = cells.getOrNull(9)?.text()?.trim() ?: ""
             )
         }
-        return list
     }
 }

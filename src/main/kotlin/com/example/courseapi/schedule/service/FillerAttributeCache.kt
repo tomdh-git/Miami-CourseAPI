@@ -1,11 +1,11 @@
-package com.example.courseapi.schedule
+package com.example.courseapi.schedule.service
 
 import com.example.courseapi.config.SchoolRegistry
-import com.example.courseapi.course.Course
-import com.example.courseapi.course.CourseByInfoInput
-import org.springframework.stereotype.Component
-
+import com.example.courseapi.course.model.Course
+import com.example.courseapi.course.model.input.CourseByInfoInput
+import com.example.courseapi.schedule.model.input.FillerByAttributesInput
 import org.springframework.cache.annotation.Cacheable
+import org.springframework.stereotype.Component
 import org.slf4j.LoggerFactory
 
 @Component
