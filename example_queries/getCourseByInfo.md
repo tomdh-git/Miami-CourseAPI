@@ -2,6 +2,7 @@
 For querying for a specific course, subject, and more!
 
 Accepted Fields:
+* school (Ex: `"miami"`, `"ucla"`)
 * subject (Ex: `["CSE"]`, `["BIO"]`, `["CSE", "BIO"]`)
 * courseNum (Ex: `134`, `150C`)
 * campus (Ex: `["O"]` (for Oxford), `["H"]` (for Hamilton), `["O","H"]` (for both Oxford and Hamilton)) **mandatory**
@@ -20,6 +21,7 @@ Accepted Fields:
 ```bash
 query {
   getCourseByInfo(input:{
+    school: "miami"
     term: "202620"
     campus: ["O"]
     subject: ["CSE"]

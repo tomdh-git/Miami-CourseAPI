@@ -1,9 +1,12 @@
 # getTerms
 For querying for all possible terms and staying up to date!
 
+Accepted Fields:
+* school (Ex: `"miami"`, `"ucla"`)
+
 ```bash
 query {
-  getTerms {
+  getTerms(school: "miami") {
     ... on SuccessField {
       fields {
         name

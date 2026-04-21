@@ -2,6 +2,7 @@
 For querying for around 10 of the best possible schedules for your desired courses.
 
 Accepted Fields:
+* school (Ex: `"miami"`, `"ucla"`)
 * courses (Ex: `["CSE 374"]`, `["CSE 374", "CSE 381"]`) **mandatory**
 * campus (Ex: `["O"]` (for Oxford), `["H"]` (for Hamilton), `["O","H"]` (for both Oxford and Hamilton)) **mandatory**
 * term (Ex: `"202620"`) **mandatory**
@@ -12,6 +13,7 @@ Accepted Fields:
 ```bash
 query {
   getScheduleByCourses(input:{
+    school: "miami"
     courses: [
       "CSE 374", 
       "CSE 381",

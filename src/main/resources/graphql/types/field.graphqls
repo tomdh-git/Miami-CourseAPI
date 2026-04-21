@@ -2,6 +2,8 @@ type Field {
     name: String
 }
 
+union FieldResult = SuccessField | ErrorField
+
 type SuccessField {
     fields: [Field]
 }
@@ -10,5 +12,3 @@ type ErrorField {
     error: String
     message: String
 }
-
-union FieldResult = SuccessField | ErrorField

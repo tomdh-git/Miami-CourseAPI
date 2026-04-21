@@ -3,6 +3,8 @@ type Schedule {
     freeTime: Int
 }
 
+union ScheduleResult = SuccessSchedule | ErrorSchedule
+
 type SuccessSchedule {
     schedules: [Schedule]
 }
@@ -11,5 +13,3 @@ type ErrorSchedule {
     error: String
     message: String
 }
-
-union ScheduleResult = SuccessSchedule | ErrorSchedule

@@ -1,4 +1,5 @@
 input ScheduleByCourseInput{
+    school: String = "miami"
     delivery: [String]
     courses: [String]
     campus: [String]
@@ -8,6 +9,7 @@ input ScheduleByCourseInput{
     preferredEnd: String
 }
 input FillerByAttributesInput{
+    school: String = "miami"
     delivery: [String]
     attributes: [String]
     courses: [String]

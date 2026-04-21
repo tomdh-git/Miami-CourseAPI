@@ -2,6 +2,7 @@
 For querying for a modified schedule that satisfies your credit requirements!
 
 Accepted Fields:
+* school (Ex: `"miami"`, `"ucla"`)
 * attributes (Ex: `["PA1C"]`, `["PAIC","PA3A"]`) **mandatory**
 * courses (Ex: `["CSE 374"]`, `["CSE 374", "CSE 381"]`) **mandatory**
 * campus (Ex: `["O"]` (for Oxford), `["H"]` (for Hamilton), `["O","H"]` (for both Oxford and Hamilton)) **mandatory**
@@ -12,6 +13,7 @@ Accepted Fields:
 ```bash
 query {
   getFillerByAttributes(input:{
+    school: "miami"
     attributes: ["PA1C"]
     courses: [
       "CSE 374", 

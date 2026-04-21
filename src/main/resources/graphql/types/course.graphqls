@@ -11,6 +11,8 @@ type Course {
     delivery: String
 }
 
+union CourseResult = SuccessCourse | ErrorCourse
+
 type SuccessCourse {
     courses: [Course]
 }
@@ -19,5 +21,3 @@ type ErrorCourse {
     error: String
     message: String
 }
-
-union CourseResult = SuccessCourse | ErrorCourse

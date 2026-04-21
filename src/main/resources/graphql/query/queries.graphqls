@@ -15,5 +15,5 @@ type Query {
         input: FillerByAttributesInput
     ): ScheduleResult
 
-    getTerms: FieldResult
+    getTerms(school: String = "miami"): FieldResult
 }

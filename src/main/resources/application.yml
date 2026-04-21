@@ -1,0 +1,20 @@
+spring:
+  application:
+    name: courseapi
+  graphql:
+    graphiql:
+      enabled: true
+      path: /graphiql
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+
+miami:
+  api:
+    url: https://www.apps.miamioh.edu/courselist/
+    token-timeout-ms: 45000
+    html-cache-timeout-ms: 30000
+
+server:
+  port: 0

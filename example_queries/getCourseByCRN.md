@@ -4,10 +4,12 @@ For querying when you know the CRN of your desired course.
 Accepted Fields:
 * crn (Ex: `12384`) **mandatory**
 * term: (Ex: `"202620"`) **mandatory**
+* school (Ex: `"miami"`, `"ucla"`)
 
 ```bash
 query {
   getCourseByCRN(input:{
+    school: "miami"
     crn: 12384
     term: "202620"
   } ) {
