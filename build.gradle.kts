@@ -58,7 +58,7 @@ dependencies {
     testImplementation("com.netflix.graphql.dgs:graphql-dgs-spring-graphql-starter-test")
 
     // Math & Combinatorics
-    implementation("com.github.tomdh-git:interval-combinator:master-SNAPSHOT")
+    implementation("com.github.tomdh-git:interval-combinator:-c4280e8754-1")
 }
 
 tasks.withType<Test> {
