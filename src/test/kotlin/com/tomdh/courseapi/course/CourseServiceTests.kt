@@ -35,4 +35,32 @@ class CourseServiceTests {
         assertEquals(expectedCourse.title, result[0].title)
         assertEquals(expectedCourse.crn, result[0].crn)
     }
+
+    @Test
+    fun `getCourseByCRN throws QueryException when repository returns empty`() = runBlocking {
+        val input = CourseByCRNInput(school = "miami", term = "202410", crn = 12345)
+        
+        whenever(schoolRegistry.getConnector("miami")).thenReturn(schoolConnector)
+        whenever(schoolConnector.getCourseByCRN(any())).thenReturn(emptyList())
+
+        org.junit.jupiter.api.assertThrows<com.tomdh.courseapi.exceptions.types.QueryException> {
+            courseService.getCourseByCRN(input)
+        }
+    }
+
+    @Test
+    fun `getCourseByInfo triggers validation and returns courses`() = runBlocking {
+        val input = CourseByInfoInput(school = "miami", term = "202410", campus = listOf("O"))
+        val expectedCourse = Course(title = "Software Engineering")
+        val validFields = com.tomdh.courseapi.field.ValidFields(emptySet(), emptySet(), emptySet(), emptySet(), emptySet(), emptySet(), emptySet(), emptySet())
+
+        whenever(schoolRegistry.getConnector("miami")).thenReturn(schoolConnector)
+        whenever(schoolConnector.getOrFetchValidFields()).thenReturn(validFields)
+        whenever(schoolConnector.getCourseByInfo(any())).thenReturn(listOf(expectedCourse))
+
+        val result = courseService.getCourseByInfo(input)
+        assertEquals(1, result.size)
+        assertEquals(expectedCourse.title, result[0].title)
+        org.mockito.kotlin.verify(validator).validateCourseFields(input, validFields)
+    }
 }

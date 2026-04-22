@@ -55,8 +55,7 @@ class MiamiClient(private val webClient: WebClient, private val config: MiamiCon
             val againCached = cachedHtml
             val againAge = againNow - cachedHtmlTs
 
-            val recentlyForced = forceFresh && againCached != null && againAge < 5000
-            val requestFreshAgain = (!forceFresh && againCached != null && againAge < config.htmlCacheTimeoutMs) || recentlyForced
+            val requestFreshAgain = !forceFresh && againCached != null && againAge < config.htmlCacheTimeoutMs
             if (requestFreshAgain) return againCached!!
 
             logger.info("Fetching fresh course list from {}", config.url)
