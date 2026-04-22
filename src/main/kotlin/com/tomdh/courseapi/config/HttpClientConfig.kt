@@ -28,7 +28,7 @@ class HttpClientConfig(private val miamiConfig: MiamiConfig) {
         return builder
             .clientConnector(ReactorClientHttpConnector(httpClient))
             .codecs { configurer ->
-                configurer.defaultCodecs().maxInMemorySize(16 * 1024 * 1024) // 16MB buffer
+                configurer.defaultCodecs().maxInMemorySize(16 * 1024 * 1024)
             }
             .build()
     }

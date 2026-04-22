@@ -1,14 +1,12 @@
 package com.tomdh.courseapi.school.miami
 
-import com.tomdh.courseapi.school.miami.parser.MiamiCourseParser
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 
 class MiamiCourseParserTests {
 
     @Test
-    fun `parseCourseList retrieves course data from HTML table`() {
-        // Arrange
+    fun `parseMiamiCourses retrieves course data from HTML table`() {
         val html = """
             <table id="courseSectionSummary" class="table">
                 <tbody>
@@ -28,11 +26,8 @@ class MiamiCourseParserTests {
             </table>
         """.trimIndent()
 
-        // Act
-        val parser = MiamiCourseParser()
-        val result = parser.parseCourses(html)
+        val result = html.parseMiamiCourses()
 
-        // Assert
         assertEquals(1, result.size)
         val course = result[0]
         assertEquals("CSE", course.subject)

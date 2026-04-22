@@ -5,10 +5,6 @@ import org.springframework.boot.actuate.health.Health
 import org.springframework.boot.actuate.health.HealthIndicator
 import org.springframework.stereotype.Component
 
-/**
- * Aggregates health status of all registered school connectors.
- * Reports DOWN if any school's upstream data source is unreachable.
- */
 @Component
 class SchoolHealthIndicator(private val registry: SchoolRegistry) : HealthIndicator {
 
