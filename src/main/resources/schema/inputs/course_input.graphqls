@@ -2,20 +2,49 @@
 Input for searching courses by various filters.
 """
 input CourseByInfoInput {
+    """The school identifier (e.g. 'miami')"""
     school: String! = "miami"
-    subject: [String]
-    courseNum: String
-    campus: [String!]!
-    attributes: [String]
-    delivery: [String]
+    
+    """Filter by academic term (e.g. '202510')"""
     term: String!
+    
+    """Filter by subject code(s) (e.g. ['CSE', 'MTH'])"""
+    subject: [String]
+    
+    """Filter by specific course number (e.g. '274')"""
+    courseNum: String
+    
+    """List of campus codes to include (e.g. ['O', 'H'])"""
+    campus: [String!]!
+    
+    """Filter by specific course attributes (e.g. PA1C (maybe ill include a list of these somewhere))"""
+    attributes: [String]
+    
+    """Filter by delivery method (e.g. Face2Face (ill include these somewhere too))"""
+    delivery: [String]
+    
+    """Filter by waitlist status (e.g. open)"""
     openWaitlist: String
+    
+    """Filter by Course Reference Number"""
     crn: Int
+    
+    """Filter by part of term within the semester"""
     partOfTerm: [String]
+    
+    """Filter by course level (e.g. GR, UG)"""
     level: String
+    
+    """Filter by keywords in the course title"""
     courseTitle: String
+    
+    """Filter by days of the week (e.g. ['M', 'W', 'F'])"""
     daysFilter: [String]
+    
+    """Exact credit hours"""
     creditHours: Int
+    
+    """Filter by specific time ranges"""
     startEndTime: [String]
 }
 

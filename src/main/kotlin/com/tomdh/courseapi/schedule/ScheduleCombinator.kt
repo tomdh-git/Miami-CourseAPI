@@ -32,6 +32,10 @@ class ScheduleCombinator(private val cache: FillerAttributeCache) {
         return try { LocalTime.parse(timeString.replace(" ", ""), timeFormatter) } catch (_: Exception) { null }
     }
 
+    /**
+     * Generates all valid, non-conflicting schedule combinations from a given list of desired courses.
+     * Combines intervals using the IntervalCombinator and filters by preferred time bounds.
+     */
     suspend fun getScheduleByCourses(input: ScheduleByCourseInput, connector: SchoolConnector): List<Schedule> {
         val parsedCourses = parseCourses(input.courses)
         val fetched = fetchCourses(parsedCourses, input, connector)
@@ -59,6 +63,10 @@ class ScheduleCombinator(private val cache: FillerAttributeCache) {
         return combinatorResults.map { Schedule(courses = it.items, freeTime = it.freeTimeMinutes) }
     }
 
+    /**
+     * Finds "filler" courses (e.g., global Miami Plan courses) that can fit into the
+     * "free time" gaps of an existing schedule without causing conflicts.
+     */
     suspend fun getFillerByAttributes(input: FillerByAttributesInput, connector: SchoolConnector): List<Schedule> = coroutineScope {
         val attributesDeferred = async { cache.fetchAttributes(input) }
         val schedulesDeferred = async { getScheduleByCourses(input.toScheduleInput(), connector) }

@@ -32,6 +32,10 @@ class MiamiClient(private val webClient: WebClient, private val config: MiamiCon
 
     private val cookies = java.util.concurrent.ConcurrentHashMap<String, String>()
 
+    /**
+     * Fetches the course list HTML on application startup to prepopulate
+     * the token and html caches, reducing latency for the first actual query.
+     */
     @PostConstruct
     fun warmUpConnection() {
         refreshScope.launch {
@@ -86,6 +90,12 @@ class MiamiClient(private val webClient: WebClient, private val config: MiamiCon
         freshToken
     }
 
+    /**
+     * Retrieves a valid CSRF token.
+     * - Returns cached token if within validity window.
+     * - Triggers asynchronous background refresh if approaching expiration.
+     * - Blocks and forces a synchronous refresh if expired.
+     */
     suspend fun getOrFetchToken(): String {
         val now = System.currentTimeMillis()
         val cached = lastToken
