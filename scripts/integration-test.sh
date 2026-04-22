@@ -14,7 +14,7 @@ echo "Running integration tests on $URL..."
 # 1. Test getTerms
 echo "Test 1: getTerms (miami)"
 RESPONSE=$(curl -s -X POST -H "Content-Type: application/json" \
-  -d '{"query": "{ getTerms(school: \"miami\") { ... on SuccessField { fields { title code value } } } }"}' \
+  -d '{"query": "{ getTerms(school: \"miami\") { ... on SuccessField { fields { name } } } }"}' \
   $URL)
 
 if echo "$RESPONSE" | grep -q "SuccessField"; then
