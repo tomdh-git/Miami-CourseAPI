@@ -1,4 +1,4 @@
-name: Java CI with Gradle
+name: CI
 
 on:
   push:
@@ -20,8 +20,74 @@ jobs:
         java-version: '17'
         distribution: 'temurin'
     - name: Setup Gradle
-      uses: gradle/actions/setup-gradle@v3
-    - name: Ensure gradlew is executable
-      run: chmod +x gradlew
-    - name: Build with Gradle Wrapper
-      run: ./gradlew build
+      uses: gradle/actions/setup-gradle@v4
+    - name: Ensure gradlew and scripts are executable
+      run: |
+        chmod +x gradlew
+        chmod +x scripts/integration-test.sh
+    - name: Static Analysis (Lint)
+      run: ./gradlew ktlintCheck
+    - name: Build
+      run: ./gradlew build -x test
+    - name: Run Unit Tests
+      run: ./gradlew test
+    - name: Integration Test (Smoke Test)
+      run: |
+        echo "Starting application in the background..."
+        ./gradlew bootRun > app.log 2>&1 &
+        APP_PID=$!
+        
+        echo "Waiting for SERVER_PORT to be logged..."
+        PORT=""
+        for i in {1..60}; do
+          PORT=$(grep "SERVER_PORT=" app.log | cut -d'=' -f2 | tr -d '\r')
+          if [ ! -z "$PORT" ]; then
+            echo "Detected server running on port $PORT"
+            break
+          fi
+          sleep 2
+        done
+        
+        if [ -z "$PORT" ]; then
+          echo "FAILED to detect SERVER_PORT after 2 minutes. App log:"
+          cat app.log
+          kill $APP_PID || true
+          exit 1
+        fi
+        
+        echo "Waiting for health check at http://localhost:$PORT/health ..."
+        for i in {1..30}; do
+          STATUS=$(curl -s http://localhost:$PORT/health | jq -r '.status' || echo "DOWN")
+          if [ "$STATUS" == "UP" ]; then
+            echo "Application is HEALTHY (UP)"
+            break
+          fi
+          sleep 2
+          if [ $i -eq 30 ]; then
+            echo "TIMEOUT: Health check failed to return UP."
+            curl -s http://localhost:$PORT/health
+            kill $APP_PID || true
+            exit 1
+          fi
+        done
+        
+        echo "Running GraphQL integration tests..."
+        ./scripts/integration-test.sh $PORT
+        
+        echo "Tearing down application..."
+        kill $APP_PID || true
+
+    - name: Upload Logs on Failure
+      if: failure()
+      uses: actions/upload-artifact@v4
+      with:
+        name: application-logs
+        path: app.log
+
+    - name: Upload Test Report
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: test-report
+        path: build/reports/tests/test/
+        retention-days: 14
