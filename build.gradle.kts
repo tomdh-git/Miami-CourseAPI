@@ -29,6 +29,7 @@ dependencyManagement {
 dependencies {
     // GraphQL - Netflix DGS
     implementation("com.netflix.graphql.dgs:graphql-dgs-spring-graphql-starter")
+    implementation("com.graphql-java:graphql-java-extended-scalars:22.0")
 
     // Web
     implementation("org.springframework.boot:spring-boot-starter-web")

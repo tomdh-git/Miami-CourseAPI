@@ -4,39 +4,30 @@ All queries require a school identifier to route to the correct data source.
 """
 type Query {
     """
-    Search for courses by various filters (subject, term, campus, etc.)
-    Returns a union of success/error result.
+    Search for courses using school-specific filters.
+    Returns canonical fields (name, timeWindows) plus full school-specific JSON data.
     """
-    getCourseByInfo(
-        input: CourseByInfoInput!
+    getCourses(
+        input: CourseQueryInput!
         limit: Int = 100
-    ): CourseResult!
-
-    """
-    Look up a specific course by its CRN (Course Reference Number).
-    """
-    getCourseByCRN(
-        input: CourseByCRNInput!
     ): CourseResult!
 
     """
     Generate non-conflicting schedule combinations from a list of courses.
+    Optionally finds filler courses if fillerFilters is provided.
     """
-    getScheduleByCourses(
-        input: ScheduleByCourseInput!
+    getSchedules(
+        input: ScheduleQueryInput!
         limit: Int = 100
     ): ScheduleResult!
 
     """
-    Find filler courses matching specific attributes that fit into existing schedules.
+    Introspect what filters and output fields a given school supports.
     """
-    getFillerByAttributes(
-        input: FillerByAttributesInput!
-        limit: Int = 100
-    ): ScheduleResult!
+    getSchoolSchema(school: String!): SchoolSchemaResult!
 
     """
     Get available academic terms for a given school.
     """
-    getTerms(school: String! = "miami"): FieldResult!
+    getTerms(school: String!): FieldResult!
 }

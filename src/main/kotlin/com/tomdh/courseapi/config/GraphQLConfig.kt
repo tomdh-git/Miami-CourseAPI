@@ -1,12 +1,11 @@
 package com.tomdh.courseapi.config
 
 import graphql.analysis.MaxQueryDepthInstrumentation
-import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Configuration
 
-@Configuration
+@org.springframework.context.annotation.Configuration
 class GraphQLConfig {
-    @Bean
+
+    @org.springframework.context.annotation.Bean
     fun maxQueryDepthInstrumentation(): MaxQueryDepthInstrumentation {
         return MaxQueryDepthInstrumentation(10)
     }

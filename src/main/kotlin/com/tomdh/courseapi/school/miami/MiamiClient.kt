@@ -1,28 +1,23 @@
 package com.tomdh.courseapi.school.miami
 
 import com.tomdh.courseapi.exceptions.types.ServerBusyException
-import jakarta.annotation.PostConstruct
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
-import org.springframework.stereotype.Component
-import org.springframework.web.reactive.function.client.WebClient
 import kotlinx.coroutines.reactor.awaitSingle
-import org.slf4j.LoggerFactory
 
-@Component
-class MiamiClient(private val webClient: WebClient, private val config: MiamiConfig) {
-    private val logger = LoggerFactory.getLogger(MiamiClient::class.java)
+@org.springframework.stereotype.Component
+class MiamiClient(
+    private val webClient: org.springframework.web.reactive.function.client.WebClient,
+    private val config: MiamiConfig
+) {
+    private val logger = org.slf4j.LoggerFactory.getLogger(MiamiClient::class.java)
     @Volatile private var lastToken: String? = null
     @Volatile private var lastTokenTs: Long = 0
     private val tokenLock = Mutex()
-    @Volatile private var refreshJob: Job? = null
-    private val refreshScope = CoroutineScope(Dispatchers.IO)
+    @Volatile private var refreshJob: kotlinx.coroutines.Job? = null
+    private val refreshScope = kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.IO)
     @Volatile private var cachedHtml: String? = null
     @Volatile private var cachedHtmlTs: Long = 0
     private val htmlCacheLock = Mutex()
@@ -36,10 +31,11 @@ class MiamiClient(private val webClient: WebClient, private val config: MiamiCon
      * Fetches the course list HTML on application startup to prepopulate
      * the token and html caches, reducing latency for the first actual query.
      */
-    @PostConstruct
+    @jakarta.annotation.PostConstruct
     fun warmUpConnection() {
         refreshScope.launch {
-            try { getCourseList() } catch (e: Exception) { logger.warn("Failed to warm up connection", e) }
+            try { getCourseList() }
+            catch (e: Exception) { logger.warn("Failed to warm up connection", e) }
         }
     }
 
@@ -56,7 +52,7 @@ class MiamiClient(private val webClient: WebClient, private val config: MiamiCon
             val againAge = againNow - cachedHtmlTs
 
             val requestFreshAgain = !forceFresh && againCached != null && againAge < config.htmlCacheTimeoutMs
-            if (requestFreshAgain) return againCached!!
+            if (requestFreshAgain) return againCached
 
             logger.info("Fetching fresh course list from {}", config.url)
             val result = webClient.get()
@@ -78,14 +74,20 @@ class MiamiClient(private val webClient: WebClient, private val config: MiamiCon
 
     suspend fun getToken(forceFresh: Boolean = false): String {
         val html = getCourseList(forceFresh)
-        return tokenRegex.find(html)?.groupValues?.get(1) ?: ""
+        return tokenRegex.find(html)
+            ?.groupValues
+            ?.get(1)
+            ?: ""
     }
 
     suspend fun forceFetchToken(): String = tokenLock.withLock {
         val againNow = System.currentTimeMillis()
         if (lastToken != null && (againNow - lastTokenTs) < 5000) return lastToken!!
         val freshToken = getToken(forceFresh = true)
-        if (freshToken.isNotEmpty()) { lastToken = freshToken; lastTokenTs = System.currentTimeMillis() }
+        if (freshToken.isNotEmpty()) {
+            lastToken = freshToken
+            lastTokenTs = System.currentTimeMillis()
+        }
         freshToken
     }
 
@@ -105,7 +107,10 @@ class MiamiClient(private val webClient: WebClient, private val config: MiamiCon
             val currentJob = refreshJob
             if (currentJob == null || !currentJob.isActive) {
                 refreshJob = refreshScope.launch {
-                    tokenLock.withLock { lastToken = getToken(); lastTokenTs = System.currentTimeMillis() }
+                    tokenLock.withLock {
+                        lastToken = getToken()
+                        lastTokenTs = System.currentTimeMillis()
+                    }
                 }
             }
             return cached
@@ -117,7 +122,9 @@ class MiamiClient(private val webClient: WebClient, private val config: MiamiCon
             val againNow = System.currentTimeMillis()
             if (lastToken != null && againNow - lastTokenTs < config.tokenTimeoutMs) return lastToken!!
             val token = getToken()
-            lastToken = token; lastTokenTs = againNow; token
+            lastToken = token
+            lastTokenTs = againNow
+            token
         }
     }
 
@@ -127,10 +134,16 @@ class MiamiClient(private val webClient: WebClient, private val config: MiamiCon
 
         if (resultHtml.contains("meta http-equiv=\"refresh\"")) {
             val redirectUrl = """content=\s*"\s*\d+;\s*url='([^']+)'\s*""""
-                .toRegex().find(resultHtml)?.groupValues?.get(1)
+                .toRegex()
+                .find(resultHtml)
+                ?.groupValues
+                ?.get(1)
             if (redirectUrl != null) resultHtml = getRedirectResponseHtml(redirectUrl)
         }
-        return HttpTextResponse(postResponse.statusCode.value(), resultHtml)
+        return HttpTextResponse(
+            postResponse.statusCode.value(),
+            resultHtml
+        )
     }
 
     private val activeRequests = java.util.concurrent.atomic.AtomicInteger(0)
@@ -145,7 +158,7 @@ class MiamiClient(private val webClient: WebClient, private val config: MiamiCon
                     .uri(config.url)
                     .header("Accept", "text/html")
                     .header("Accept-Encoding", "gzip, deflate")
-                    .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                    .contentType(org.springframework.http.MediaType.APPLICATION_FORM_URLENCODED)
                     .header("User-Agent", "Mozilla/5.0")
                     .header("Origin", "https://www.apps.miamioh.edu")
                     .header("Referer", "https://www.apps.miamioh.edu/courselist/")
@@ -169,7 +182,10 @@ class MiamiClient(private val webClient: WebClient, private val config: MiamiCon
 
     private fun determineRedirect(redirectUrl: String): String {
         return if (redirectUrl.startsWith("http")) redirectUrl
-        else "https://www.apps.miamioh.edu${if (redirectUrl.startsWith("/")) redirectUrl else "/courselist/$redirectUrl"}"
+        else "https://www.apps.miamioh.edu${
+            if (redirectUrl.startsWith("/")) redirectUrl 
+            else "/courselist/$redirectUrl"
+        }"
     }
 
     private suspend fun getRedirectResponseHtml(redirectUrl: String): String {

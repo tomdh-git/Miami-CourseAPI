@@ -1,10 +1,13 @@
 package com.tomdh.courseapi.course
 
+import com.tomdh.courseapi.exceptions.types.QueryException
+import com.tomdh.courseapi.exceptions.types.ValidationException
 import com.tomdh.courseapi.school.SchoolConnector
 import com.tomdh.courseapi.school.SchoolRegistry
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.InjectMocks
 import org.mockito.Mock
@@ -17,50 +20,52 @@ class CourseServiceTests {
 
     @Mock lateinit var schoolRegistry: SchoolRegistry
     @Mock lateinit var schoolConnector: SchoolConnector
-    @Mock lateinit var validator: CourseValidator
 
     @InjectMocks lateinit var courseService: CourseService
 
+    private fun testSection(name: String = "CSE 271 - OOP") = SchedulableSection(
+        name = name,
+        timeWindows = listOf(CanonicalTimeWindow("MONDAY", "10:00am", "10:50am")),
+        data = mapOf("subject" to "CSE", "courseNum" to "271", "crn" to 12345)
+    )
+
     @Test
-    fun `getCourseByCRN returns course from mapped school`() = runBlocking {
-        val input = CourseByCRNInput(school = "miami", term = "202410", crn = 12345)
-        val expectedCourse = Course(title = "Intro to CS", crn = 12345)
+    fun `getCourses returns sections from connector`() = runBlocking {
+        val filters = mapOf<String, Any?>("term" to "202410", "campus" to listOf("O"))
 
         whenever(schoolRegistry.getConnector("miami")).thenReturn(schoolConnector)
-        whenever(schoolConnector.getCourseByCRN(any())).thenReturn(listOf(expectedCourse))
+        whenever(schoolConnector.validateFilters(any())).thenReturn(emptyList())
+        whenever(schoolConnector.queryCourses(any())).thenReturn(listOf(testSection()))
 
-        val result = courseService.getCourseByCRN(input)
+        val result = courseService.getCourses("miami", filters, 100)
 
         assertEquals(1, result.size)
-        assertEquals(expectedCourse.title, result[0].title)
-        assertEquals(expectedCourse.crn, result[0].crn)
+        assertEquals("CSE 271 - OOP", result[0].name)
     }
 
     @Test
-    fun `getCourseByCRN throws QueryException when repository returns empty`() = runBlocking {
-        val input = CourseByCRNInput(school = "miami", term = "202410", crn = 12345)
-        
-        whenever(schoolRegistry.getConnector("miami")).thenReturn(schoolConnector)
-        whenever(schoolConnector.getCourseByCRN(any())).thenReturn(emptyList())
+    fun `getCourses throws QueryException when connector returns empty`() = runBlocking {
+        val filters = mapOf<String, Any?>("term" to "202410", "campus" to listOf("O"))
 
-        org.junit.jupiter.api.assertThrows<com.tomdh.courseapi.exceptions.types.QueryException> {
-            courseService.getCourseByCRN(input)
+        whenever(schoolRegistry.getConnector("miami")).thenReturn(schoolConnector)
+        whenever(schoolConnector.validateFilters(any())).thenReturn(emptyList())
+        whenever(schoolConnector.queryCourses(any())).thenReturn(emptyList())
+
+        assertThrows<QueryException> {
+            courseService.getCourses("miami", filters, 100)
         }
     }
 
     @Test
-    fun `getCourseByInfo triggers validation and returns courses`() = runBlocking {
-        val input = CourseByInfoInput(school = "miami", term = "202410", campus = listOf("O"))
-        val expectedCourse = Course(title = "Software Engineering")
-        val validFields = com.tomdh.courseapi.field.ValidFields(emptySet(), emptySet(), emptySet(), emptySet(), emptySet(), emptySet(), emptySet(), emptySet())
+    fun `getCourses throws ValidationException when validation fails`() = runBlocking {
+        val filters = mapOf<String, Any?>("term" to "", "campus" to listOf("O"))
 
         whenever(schoolRegistry.getConnector("miami")).thenReturn(schoolConnector)
-        whenever(schoolConnector.getOrFetchValidFields()).thenReturn(validFields)
-        whenever(schoolConnector.getCourseByInfo(any())).thenReturn(listOf(expectedCourse))
+        whenever(schoolConnector.validateFilters(any())).thenReturn(listOf("'term' is required", "'campus' invalid"))
 
-        val result = courseService.getCourseByInfo(input)
-        assertEquals(1, result.size)
-        assertEquals(expectedCourse.title, result[0].title)
-        org.mockito.kotlin.verify(validator).validateCourseFields(input, validFields)
+        val ex = assertThrows<ValidationException> {
+            courseService.getCourses("miami", filters, 100)
+        }
+        assertEquals(2, ex.violations.size)
     }
 }

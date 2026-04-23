@@ -1,8 +1,7 @@
 package com.tomdh.courseapi.school
 
-import org.springframework.stereotype.Component
 
-@Component
+@org.springframework.stereotype.Component
 class SchoolRegistry(connectors: List<SchoolConnector>) {
     private val map = connectors.associateBy { it.schoolId }
 

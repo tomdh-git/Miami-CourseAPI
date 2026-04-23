@@ -1,30 +1,28 @@
 package com.tomdh.courseapi.schedule
 
-import com.tomdh.courseapi.school.SchoolRegistry
-import org.springframework.stereotype.Service
+import com.tomdh.courseapi.exceptions.types.ValidationException
 
-@Service
+@org.springframework.stereotype.Service
 class ScheduleService(
     private val combinator: ScheduleCombinator,
-    private val validator: ScheduleValidator,
-    private val registry: SchoolRegistry
+    private val registry: com.tomdh.courseapi.school.SchoolRegistry
 ) {
-    suspend fun getScheduleByCourses(input: ScheduleByCourseInput): List<Schedule> {
+    /**
+     * Generates schedules, optionally with filler courses.
+     * If [ScheduleQueryInput.fillerFilters] is provided, also searches for fillers.
+     */
+    @org.springframework.cache.annotation.Cacheable(value = ["schedules"], key = "{#input}")
+    suspend fun getSchedules(input: ScheduleQueryInput): List<Schedule> {
         val connector = registry.getConnector(input.school)
-        validator.validateScheduleFields(
-            input,
-            connector.getOrFetchValidFields()
-        )
-        return combinator.getScheduleByCourses(input, connector)
-    }
 
-    suspend fun getFillerByAttributes(input: FillerByAttributesInput): List<Schedule> {
-        val connector = registry.getConnector(input.school)
-        validator.validateScheduleFields(
-            input.toScheduleInput(),
-            connector.getOrFetchValidFields(),
-            input.attributes
-        )
-        return combinator.getFillerByAttributes(input, connector)
+        // Validate the base filters
+        val errors = connector.validateFilters(input.filters)
+        if (errors.isNotEmpty()) throw ValidationException(errors)
+
+        return if (input.fillerFilters != null) {
+            combinator.getFillerSchedules(input, connector)
+        } else {
+            combinator.getScheduleByCourses(input, connector)
+        }
     }
 }

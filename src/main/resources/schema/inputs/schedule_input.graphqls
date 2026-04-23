@@ -1,42 +1,25 @@
 """
-Input for generating schedule combinations from a course list.
+Unified input for schedule generation and optional filler search.
+If fillerFilters is provided, the combinator will also find filler courses.
 """
-input ScheduleByCourseInput {
-    school: String! = "miami"
-    term: String!
-    campus: [String!]!
-    
-    """List of desired courses in the format 'SUBJECT NUM' (e.g. 'CSE 271')"""
+input ScheduleQueryInput {
+    school: String!
+
+    """School-specific filters (term, campus, etc.)"""
+    filters: JSON!
+
+    """List of course identifiers (school-specific format, e.g. 'CSE 271')"""
     courses: [String!]!
-    
-    """Filter allowed delivery methods for the scheduled courses"""
-    delivery: [String]
-    
+
     """If true, the combinator will attempt to maximize consecutive free blocks"""
     optimizeFreeTime: Boolean
-    
+
     """Preferred earliest start time in 'H:MMa' format (e.g. '9:00AM')"""
     preferredStart: String
-    
+
     """Preferred latest end time in 'H:MMa' format (e.g. '4:00PM')"""
     preferredEnd: String
-}
 
-"""
-Input for finding filler courses that match attributes and fit into existing schedules.
-"""
-input FillerByAttributesInput {
-    school: String! = "miami"
-    term: String!
-    campus: [String!]!
-    
-    """List of existing courses that must remain in the schedule"""
-    courses: [String!]!
-    
-    """List of attribute filters the filler courses must fulfill"""
-    attributes: [String!]!
-    
-    delivery: [String]
-    preferredStart: String
-    preferredEnd: String
+    """Optional: school-specific filters for filler courses (e.g. attributes, delivery)"""
+    fillerFilters: JSON
 }

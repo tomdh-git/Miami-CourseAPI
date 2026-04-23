@@ -1,8 +1,6 @@
 package com.tomdh.courseapi.school.miami
 
-import org.springframework.boot.context.properties.ConfigurationProperties
-
-@ConfigurationProperties(prefix = "miami.api")
+@org.springframework.boot.context.properties.ConfigurationProperties(prefix = "miami.api")
 data class MiamiConfig(
     val url: String = "https://www.apps.miamioh.edu/courselist/",
     val tokenTimeoutMs: Long = 45000,

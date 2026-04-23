@@ -5,6 +5,7 @@ import org.slf4j.Logger
 
 fun Throwable.toErrorResponse(logger: Logger): Pair<String, String> {
     return when (this) {
+        is ValidationException -> "VALIDATION_ERROR" to violations.joinToString(" | ")
         is IllegalArgumentException -> "VALIDATION_ERROR" to (message ?: "Invalid input")
         is QueryException -> "QUERY_ERROR" to (message ?: "Query error")
         is APIException -> "API_ERROR" to (message ?: "Upstream error")

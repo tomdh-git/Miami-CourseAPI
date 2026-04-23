@@ -3,7 +3,6 @@ package com.tomdh.courseapi.course
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.InjectMocks
@@ -17,37 +16,31 @@ class CourseResolverTests {
     @Mock lateinit var service: CourseService
     @InjectMocks lateinit var resolver: CourseResolver
 
-    @Test
-    fun `getCourseByInfo returns SuccessCourse on success`() = runBlocking {
-        val input = CourseByInfoInput(school = "miami", term = "202410", campus = listOf("O"))
-        val expectedCourses = listOf(Course(subject = "CSE", courseNum = "271", crn = 12345))
-        whenever(service.getCourseByInfo(input)).thenReturn(expectedCourses)
+    private fun testSection(name: String = "CSE 271 - OOP") = SchedulableSection(
+        name = name,
+        timeWindows = listOf(CanonicalTimeWindow("MONDAY", "10:00am", "10:50am")),
+        data = mapOf("subject" to "CSE", "courseNum" to "271")
+    )
 
-        val result = resolver.getCourseByInfo(input, limit = 10)
-        
+    @Test
+    fun `getCourses returns SuccessCourse on success`() = runBlocking {
+        val input = CourseQueryInput(school = "miami", filters = mapOf("term" to "202410", "campus" to listOf("O")))
+        whenever(service.getCourses("miami", input.filters, 10)).thenReturn(listOf(testSection()))
+
+        val result = resolver.getCourses(input, limit = 10)
+
         assertTrue(result is SuccessCourse)
         assertEquals(1, (result as SuccessCourse).courses.size)
     }
 
     @Test
-    fun `getCourseByInfo returns ErrorCourse on failure`() = runBlocking {
-        val input = CourseByInfoInput(school = "miami", term = "202410", campus = listOf("O"))
-        whenever(service.getCourseByInfo(input)).thenThrow(IllegalArgumentException("Invalid term"))
+    fun `getCourses returns ErrorCourse on failure`() = runBlocking {
+        val input = CourseQueryInput(school = "miami", filters = mapOf("term" to "202410", "campus" to listOf("O")))
+        whenever(service.getCourses(eq("miami"), any(), eq(100))).thenThrow(IllegalArgumentException("Invalid term"))
 
-        val result = resolver.getCourseByInfo(input, limit = null)
-        
+        val result = resolver.getCourses(input, limit = null)
+
         assertTrue(result is ErrorCourse)
         assertEquals("VALIDATION_ERROR", (result as ErrorCourse).error)
-    }
-
-    @Test
-    fun `getCourseByCRN returns SuccessCourse on success`() = runBlocking {
-        val input = CourseByCRNInput(school = "miami", term = "202410", crn = 12345)
-        val expectedCourses = listOf(Course(subject = "CSE", courseNum = "271", crn = 12345))
-        whenever(service.getCourseByCRN(input)).thenReturn(expectedCourses)
-
-        val result = resolver.getCourseByCRN(input)
-        
-        assertTrue(result is SuccessCourse)
     }
 }

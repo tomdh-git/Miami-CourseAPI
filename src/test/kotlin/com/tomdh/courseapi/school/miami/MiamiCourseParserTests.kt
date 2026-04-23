@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Test
 class MiamiCourseParserTests {
 
     @Test
-    fun `parseMiamiCourses retrieves course data from HTML table`() {
+    fun `parseMiamiCoursesToSections retrieves section data from HTML table`() {
         val html = """
             <table id="courseSectionSummary" class="table">
                 <tbody>
@@ -21,22 +21,45 @@ class MiamiCourseParserTests {
                 <td>4</td>
                 <td>25</td>
                 <td>10</td>
-                <td>MWF 10:05 am-11:00 am</td>
+                <td>MWF 10:05am-11:00am 01/13-05/02</td>
             </tr>
                 </tbody>
             </table>
         """.trimIndent()
 
-        val result = html.parseMiamiCourses()
+        val result = html.parseMiamiCoursesToSections()
 
         assertEquals(1, result.size)
-        val course = result[0]
-        assertEquals("CSE", course.subject)
-        assertEquals("174", course.courseNum)
-        assertEquals("A", course.section)
-        assertEquals(12345, course.crn)
-        assertEquals("Intro to Programming", course.title)
-        assertEquals("MWF 10:05 am-11:00 am", course.delivery)
+        val section = result[0]
+        assertEquals("CSE 174 - Intro to Programming", section.name)
+        assertEquals("CSE", section.data["subject"])
+        assertEquals("174", section.data["courseNum"])
+        assertEquals(12345, section.data["crn"])
+        assertTrue(section.timeWindows.isNotEmpty())
+        assertEquals("MONDAY", section.timeWindows[0].day)
+    }
+
+    @Test
+    fun `parseMiamiDeliveryToTimeWindows parses delivery string`() {
+        val delivery = "MWF 10:05am-11:00am 01/13-05/02"
+        val windows = parseMiamiDeliveryToTimeWindows(delivery)
+
+        assertEquals(3, windows.size)
+        assertEquals("MONDAY", windows[0].day)
+        assertEquals("WEDNESDAY", windows[1].day)
+        assertEquals("FRIDAY", windows[2].day)
+        assertEquals("10:05am", windows[0].startTime)
+        assertEquals("11:00am", windows[0].endTime)
+    }
+
+    @Test
+    fun `parseMiamiDeliveryToTimeWindows skips single-date entries`() {
+        val delivery = "MWF 10:05am-11:00am 01/13-05/02 R 2:00pm-3:00pm 03/15"
+        val windows = parseMiamiDeliveryToTimeWindows(delivery)
+
+        // Should only have MWF windows, not the single-date Thursday
+        assertEquals(3, windows.size)
+        assertTrue(windows.none { it.day == "THURSDAY" })
     }
 
     @Test
@@ -49,11 +72,12 @@ class MiamiCourseParserTests {
         """.trimIndent()
 
         val fields = html.parseMiamiFields()
-        
+
         assertEquals(2, fields.terms.size)
         assertTrue(fields.terms.contains("202410"))
         assertTrue(fields.terms.contains("202420"))
     }
+
     @Test
     fun `parseMiamiTerms extracts term fields`() {
         val html = """

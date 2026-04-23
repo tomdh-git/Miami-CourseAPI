@@ -1,0 +1,20 @@
+"""
+Result of introspecting a school's API schema.
+"""
+union SchoolSchemaResult = SuccessSchoolSchema | ErrorSchoolSchema
+
+type SuccessSchoolSchema {
+    """The school identifier"""
+    school: String!
+
+    """JSON schema describing valid input filters (keys, types, required)"""
+    inputSchema: JSON!
+
+    """JSON schema describing the output course data fields"""
+    outputSchema: JSON!
+}
+
+type ErrorSchoolSchema {
+    error: String!
+    message: String!
+}

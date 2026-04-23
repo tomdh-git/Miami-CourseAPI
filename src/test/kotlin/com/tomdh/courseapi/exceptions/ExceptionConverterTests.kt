@@ -11,6 +11,14 @@ class ExceptionConverterTests {
     private val logger = mock<Logger>()
 
     @Test
+    fun `toErrorResponse maps ValidationException to VALIDATION_ERROR`() {
+        val ex = ValidationException(listOf("'term' is required", "'campus' is required"))
+        val (code, msg) = ex.toErrorResponse(logger)
+        assertEquals("VALIDATION_ERROR", code)
+        assertEquals("'term' is required | 'campus' is required", msg)
+    }
+
+    @Test
     fun `toErrorResponse maps QueryException to QUERY_ERROR`() {
         val ex = QueryException("Bad query")
         val (code, msg) = ex.toErrorResponse(logger)

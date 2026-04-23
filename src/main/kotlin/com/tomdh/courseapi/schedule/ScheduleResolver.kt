@@ -1,30 +1,20 @@
 package com.tomdh.courseapi.schedule
 
-import com.tomdh.courseapi.exceptions.*
-import com.netflix.graphql.dgs.DgsComponent
-import com.netflix.graphql.dgs.DgsQuery
+import com.tomdh.courseapi.exceptions.resolveQuery
 import com.netflix.graphql.dgs.InputArgument
-import org.slf4j.LoggerFactory
 
-@DgsComponent
+@com.netflix.graphql.dgs.DgsComponent
 class ScheduleResolver(private val service: ScheduleService) {
-    private val logger = LoggerFactory.getLogger(ScheduleResolver::class.java)
+    private val logger = org.slf4j.LoggerFactory.getLogger(ScheduleResolver::class.java)
 
-    @DgsQuery
-    suspend fun getScheduleByCourses(@InputArgument input: ScheduleByCourseInput, @InputArgument limit: Int?): ScheduleResult {
+    @com.netflix.graphql.dgs.DgsQuery
+    suspend fun getSchedules(
+        @InputArgument input: ScheduleQueryInput,
+        @InputArgument limit: Int?
+    ): ScheduleResult {
         return resolveQuery(logger, ::ErrorSchedule) {
             SuccessSchedule(
-                service.getScheduleByCourses(input)
-                    .take(limit ?: 100)
-            )
-        }
-    }
-
-    @DgsQuery
-    suspend fun getFillerByAttributes(@InputArgument input: FillerByAttributesInput, @InputArgument limit: Int?): ScheduleResult {
-        return resolveQuery(logger, ::ErrorSchedule) {
-            SuccessSchedule(
-                service.getFillerByAttributes(input)
+                service.getSchedules(input)
                     .take(limit ?: 100)
             )
         }

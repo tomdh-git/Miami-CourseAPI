@@ -1,70 +1,92 @@
 package com.tomdh.courseapi.schedule
 
+import com.tomdh.courseapi.course.CanonicalTimeWindow
+import com.tomdh.courseapi.course.SchedulableSection
+import com.tomdh.courseapi.exceptions.types.ValidationException
 import com.tomdh.courseapi.school.SchoolConnector
 import com.tomdh.courseapi.school.SchoolRegistry
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.InjectMocks
 import org.mockito.Mock
 import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.kotlin.any
-import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 
 @ExtendWith(MockitoExtension::class)
 class ScheduleServiceTests {
 
     @Mock lateinit var schoolRegistry: SchoolRegistry
-    @Mock lateinit var validator: ScheduleValidator
     @Mock lateinit var combinator: ScheduleCombinator
     @Mock lateinit var connector: SchoolConnector
 
     @InjectMocks lateinit var scheduleService: ScheduleService
 
     @Test
-    fun `getScheduleByCourses validates and combines courses`() = runBlocking {
-        val input = ScheduleByCourseInput(
+    fun `getSchedules validates and returns schedules`() = runBlocking {
+        val input = ScheduleQueryInput(
             school = "miami",
-            term = "202410",
-            campus = listOf("O"),
+            filters = mapOf("term" to "202410", "campus" to listOf("O")),
             courses = listOf("CSE 271")
         )
-        val expectedSchedule = Schedule(courses = emptyList<com.tomdh.courseapi.course.Course>(), freeTime = 100)
-        val validFields = com.tomdh.courseapi.field.ValidFields(emptySet(), emptySet(), emptySet(), emptySet(), emptySet(), emptySet(), emptySet(), emptySet())
+        val section = SchedulableSection(
+            name = "CSE 271 - OOP",
+            timeWindows = listOf(CanonicalTimeWindow("MONDAY", "10:00am", "10:50am")),
+            data = mapOf("subject" to "CSE")
+        )
+        val expectedSchedule = Schedule(sections = listOf(section), freeTime = 100)
 
         whenever(schoolRegistry.getConnector("miami")).thenReturn(connector)
-        whenever(connector.getOrFetchValidFields()).thenReturn(validFields)
+        whenever(connector.validateFilters(any())).thenReturn(emptyList())
         whenever(combinator.getScheduleByCourses(input, connector)).thenReturn(listOf(expectedSchedule))
 
-        val result = scheduleService.getScheduleByCourses(input)
+        val result = scheduleService.getSchedules(input)
 
         assertEquals(1, result.size)
         assertEquals(100, result[0].freeTime)
-        verify(validator).validateScheduleFields(input, validFields)
     }
 
     @Test
-    fun `getFillerByAttributes validates and finds fillers`() = runBlocking {
-        val input = FillerByAttributesInput(
+    fun `getSchedules with fillerFilters delegates to filler combinator`() = runBlocking {
+        val input = ScheduleQueryInput(
             school = "miami",
-            term = "202410",
-            campus = listOf("O"),
+            filters = mapOf("term" to "202410", "campus" to listOf("O")),
             courses = listOf("CSE 271"),
-            attributes = listOf("PA1C")
+            fillerFilters = mapOf("attributes" to listOf("PA1C"))
         )
-        val expectedSchedule = Schedule(courses = emptyList<com.tomdh.courseapi.course.Course>(), freeTime = 50)
-        val validFields = com.tomdh.courseapi.field.ValidFields(emptySet(), emptySet(), emptySet(), emptySet(), emptySet(), emptySet(), emptySet(), emptySet())
+        val section = SchedulableSection(
+            name = "CSE 271 - OOP",
+            timeWindows = listOf(CanonicalTimeWindow("MONDAY", "10:00am", "10:50am")),
+            data = mapOf("subject" to "CSE")
+        )
+        val expectedSchedule = Schedule(sections = listOf(section), freeTime = 50)
 
         whenever(schoolRegistry.getConnector("miami")).thenReturn(connector)
-        whenever(connector.getOrFetchValidFields()).thenReturn(validFields)
-        whenever(combinator.getFillerByAttributes(input, connector)).thenReturn(listOf(expectedSchedule))
+        whenever(connector.validateFilters(any())).thenReturn(emptyList())
+        whenever(combinator.getFillerSchedules(input, connector)).thenReturn(listOf(expectedSchedule))
 
-        val result = scheduleService.getFillerByAttributes(input)
+        val result = scheduleService.getSchedules(input)
 
         assertEquals(1, result.size)
         assertEquals(50, result[0].freeTime)
-        verify(validator).validateScheduleFields(input.toScheduleInput(), validFields, input.attributes)
+    }
+
+    @Test
+    fun `getSchedules throws ValidationException when filters invalid`() = runBlocking {
+        val input = ScheduleQueryInput(
+            school = "miami",
+            filters = mapOf("term" to ""),
+            courses = listOf("CSE 271")
+        )
+
+        whenever(schoolRegistry.getConnector("miami")).thenReturn(connector)
+        whenever(connector.validateFilters(any())).thenReturn(listOf("'term' is required"))
+
+        assertThrows<ValidationException> {
+            scheduleService.getSchedules(input)
+        }
     }
 }

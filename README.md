@@ -22,15 +22,14 @@ graph TB
         EC["ExceptionConverter<br/>resolveQuery()"]
     end
 
-    subgraph "Service Layer"
-        CS["CourseService"]
-        FS["FieldService"]
-        SS["ScheduleService"]
+    subgraph "Service Layer (Caffeine Cached)"
+        CS["CourseService<br/>getCourses()"]
+        FS["FieldService<br/>getSchoolSchema()"]
+        SS["ScheduleService<br/>getSchedules()"]
     end
 
     subgraph "Validation"
-        CV["CourseValidator"]
-        SV["ScheduleValidator"]
+        CV["SchoolConnector.validateFilters()"]
     end
 
     subgraph "Schedule Engine"
@@ -66,12 +65,12 @@ graph TB
     FR --> FS
     SR --> SS
 
-    CS -->|validate input| CV
-    SS -->|validate input| SV
-
     CS --> REG
     FS --> REG
     SS --> REG
+    
+    REG -->|lookup by schoolId| CONN
+    CONN -->|validate input| CV
 
     SS --> SC
 
@@ -97,25 +96,27 @@ graph TB
 
 ### Query Flows
 
-#### `getCourseByInfo` / `getCourseByCRN` — Course Lookup
+#### `getCourses` — Unified Course Lookup
 ```mermaid
 sequenceDiagram
     participant C as Client
     participant R as CourseResolver
     participant S as CourseService
-    participant V as CourseValidator
+    participant CCH as CaffeineCache
     participant REG as SchoolRegistry
     participant MC as MiamiConnector
     participant CL as MiamiClient
     participant M as Miami Server
 
     C->>R: GraphQL query
-    R->>S: getCourseByInfo(input)
+    R->>S: getCourses(input)
+    S->>CCH: checkCache(school, filters)
+    CCH-->>S: Cache hit | miss
     S->>REG: getConnector(school)
     REG-->>S: MiamiConnector
-    S->>V: validateCourseFields(input, validFields)
-    Note over V: Throws IllegalArgumentException<br/>on invalid term/subject/campus
-    S->>MC: getCourseByInfo(input)
+    S->>MC: validateFilters(filters)
+    Note over MC: Throws ValidationException<br/>on invalid map keys
+    S->>MC: queryCourses(filters)
     MC->>CL: getOrFetchToken()
     Note over CL: Returns cached CSRF token<br/>or fetches fresh one
     CL-->>MC: token
@@ -130,25 +131,27 @@ sequenceDiagram
     R-->>C: SuccessCourse / ErrorCourse
 ```
 
-#### `getScheduleByCourses` — Schedule Generation
+#### `getSchedules` — Unified Schedule Generation & Fillers
 ```mermaid
 sequenceDiagram
     participant C as Client
     participant R as ScheduleResolver
     participant S as ScheduleService
-    participant V as ScheduleValidator
-    participant SC as ScheduleCombinator
+    participant CCH as CaffeineCache
     participant MC as MiamiConnector
+    participant SC as ScheduleCombinator
     participant IC as IntervalCombinator
 
     C->>R: GraphQL query
-    R->>S: getScheduleByCourses(input)
-    S->>V: validateScheduleFields(input, validFields)
+    R->>S: getSchedules(input)
+    S->>CCH: checkCache(input)
+    CCH-->>S: Cache hit | miss
+    S->>MC: validateFilters(input.filters)
     S->>SC: getScheduleByCourses(input, connector)
     Note over SC: Parses "CSE 174" → ("CSE","174")
     loop Each requested course (async)
-        SC->>MC: getCourseByInfo(query)
-        MC-->>SC: List<Course> (all sections)
+        SC->>MC: queryCourses(filters)
+        MC-->>SC: List<SchedulableSection> (all sections)
     end
     Note over SC: Verifies all courses found
     SC->>IC: IntervalCombinator.generate()
@@ -195,7 +198,7 @@ sequenceDiagram
 | **ExceptionConverter** | Catches all exceptions at the resolver boundary and maps them to typed GraphQL error responses (`VALIDATION_ERROR`, `QUERY_ERROR`, `API_ERROR`, `SERVER_BUSY`) |
 | **MiamiClient** | Manages CSRF tokens, HTML caching, cookie state, and HTTP retries against Miami's server. Warms up on startup via `@PostConstruct` |
 | **ScheduleCombinator** | Fetches all sections concurrently, maps them to time intervals, and delegates to `IntervalCombinator` for conflict-free schedule generation |
-| **FillerAttributeCache** | Caches attribute-based course lookups for the filler flow to avoid redundant network calls |
+| **Caffeine CacheManager** | In-memory boundaries caching `courses`, `schedules`, and `fillerAttributes` using strict structural keys to heavily reduce duplicate downstream payload fetches |
 
 ## Testing & CI
 

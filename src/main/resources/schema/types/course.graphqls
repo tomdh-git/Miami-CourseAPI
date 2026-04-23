@@ -1,17 +1,30 @@
 """
-A course section offered at a university.
+A course section with canonical fields that every school provides,
+plus the full school-specific data as JSON.
 """
-type Course {
-    subject: String!
-    courseNum: String!
-    title: String!
-    section: String!
-    crn: Int!
-    campus: String!
-    credits: Int!
-    capacity: String!
-    requests: String!
-    delivery: String!
+type CourseSection {
+    """Display name (e.g. 'CSE 271 - Object-Oriented Programming')"""
+    name: String!
+
+    """Parsed time windows for this section"""
+    timeWindows: [TimeWindow!]!
+
+    """Full school-specific course data"""
+    data: JSON!
+}
+
+"""
+A single time block on a specific day.
+"""
+type TimeWindow {
+    """Day of the week (e.g. 'MONDAY', 'TUESDAY')"""
+    day: String!
+
+    """Start time (e.g. '10:00am')"""
+    startTime: String!
+
+    """End time (e.g. '10:50am')"""
+    endTime: String!
 }
 
 """
@@ -21,7 +34,7 @@ Consumers should use inline fragments to handle both success and error cases.
 union CourseResult = SuccessCourse | ErrorCourse
 
 type SuccessCourse {
-    courses: [Course!]!
+    courses: [CourseSection!]!
 }
 
 type ErrorCourse {

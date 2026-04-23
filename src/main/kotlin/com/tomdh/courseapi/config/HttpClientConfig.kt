@@ -1,27 +1,28 @@
 package com.tomdh.courseapi.config
 
-import com.tomdh.courseapi.school.miami.MiamiConfig
-import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Configuration
-import org.springframework.web.reactive.function.client.WebClient
-import org.springframework.http.client.reactive.ReactorClientHttpConnector
-import reactor.netty.http.client.HttpClient
-import io.netty.channel.ChannelOption
 import io.netty.handler.timeout.ReadTimeoutHandler
 import io.netty.handler.timeout.WriteTimeoutHandler
-import java.time.Duration
-import java.util.concurrent.TimeUnit
+import org.springframework.web.reactive.function.client.WebClient
+import org.springframework.http.client.reactive.ReactorClientHttpConnector
+import java.util.concurrent.TimeUnit.SECONDS
 
-@Configuration
-class HttpClientConfig(private val miamiConfig: MiamiConfig) {
-    @Bean
+@org.springframework.context.annotation.Configuration
+class HttpClientConfig(private val miamiConfig: com.tomdh.courseapi.school.miami.MiamiConfig) {
+
+    @org.springframework.context.annotation.Bean
     fun webClient(builder: WebClient.Builder): WebClient {
-        val httpClient = HttpClient.create()
-            .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, miamiConfig.connectTimeoutMs)
-            .responseTimeout(Duration.ofSeconds(miamiConfig.readWriteTimeoutSec))
+        val httpClient = reactor.netty.http.client.HttpClient.create()
+            .option(io.netty.channel.ChannelOption.CONNECT_TIMEOUT_MILLIS, miamiConfig.connectTimeoutMs)
+            .responseTimeout(java.time.Duration.ofSeconds(miamiConfig.readWriteTimeoutSec))
             .doOnConnected { conn ->
-                conn.addHandlerLast(ReadTimeoutHandler(miamiConfig.readWriteTimeoutSec, TimeUnit.SECONDS))
-                conn.addHandlerLast(WriteTimeoutHandler(miamiConfig.readWriteTimeoutSec, TimeUnit.SECONDS))
+                conn.addHandlerLast(ReadTimeoutHandler(
+                    miamiConfig.readWriteTimeoutSec,
+                    SECONDS)
+                )
+                conn.addHandlerLast(WriteTimeoutHandler(
+                    miamiConfig.readWriteTimeoutSec,
+                    SECONDS)
+                )
             }
             .followRedirect(true)
 

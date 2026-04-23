@@ -3,9 +3,8 @@ package com.tomdh.courseapi.school
 import kotlinx.coroutines.runBlocking
 import org.springframework.boot.actuate.health.Health
 import org.springframework.boot.actuate.health.HealthIndicator
-import org.springframework.stereotype.Component
 
-@Component
+@org.springframework.stereotype.Component
 class SchoolHealthIndicator(private val registry: SchoolRegistry) : HealthIndicator {
 
     override fun health(): Health {
@@ -24,6 +23,8 @@ class SchoolHealthIndicator(private val registry: SchoolRegistry) : HealthIndica
             }
         }
 
-        return builder.withDetails(details).build()
+        return builder
+            .withDetails(details)
+            .build()
     }
 }

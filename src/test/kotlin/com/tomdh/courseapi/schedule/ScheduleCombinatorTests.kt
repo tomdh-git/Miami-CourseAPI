@@ -1,6 +1,7 @@
 package com.tomdh.courseapi.schedule
 
-import com.tomdh.courseapi.course.Course
+import com.tomdh.courseapi.course.CanonicalTimeWindow
+import com.tomdh.courseapi.course.SchedulableSection
 import com.tomdh.courseapi.exceptions.types.QueryException
 import com.tomdh.courseapi.school.SchoolConnector
 import kotlinx.coroutines.runBlocking
@@ -22,56 +23,59 @@ class ScheduleCombinatorTests {
 
     @InjectMocks lateinit var combinator: ScheduleCombinator
 
+    private fun section(subject: String, num: String, delivery: String): SchedulableSection {
+        val timeWindows = com.tomdh.courseapi.school.miami.parseMiamiDeliveryToTimeWindows(delivery)
+        return SchedulableSection(
+            name = "$subject $num",
+            timeWindows = timeWindows,
+            data = mapOf("subject" to subject, "courseNum" to num, "delivery" to delivery)
+        )
+    }
+
     @Test
     fun `getScheduleByCourses correctly combines courses and filters by time`() = runBlocking {
-        val input = ScheduleByCourseInput(
+        val input = ScheduleQueryInput(
             school = "miami",
-            term = "202410",
-            campus = listOf("O"),
+            filters = mapOf("term" to "202410", "campus" to listOf("O")),
             courses = listOf("CSE 271", "MTH 251"),
             preferredStart = "9:00am",
             preferredEnd = "5:00pm",
             optimizeFreeTime = true
         )
 
-        val cseCourse = Course(
-            subject = "CSE", courseNum = "271", crn = 1,
-            delivery = "MWF 10:05 am-11:00 am"
-        )
-        val mthCourse = Course(
-            subject = "MTH", courseNum = "251", crn = 2,
-            delivery = "MWF 11:40 am-12:35 pm"
-        )
+        val cseSection = section("CSE", "271", "MWF 10:05am-11:00am")
+        val mthSection = section("MTH", "251", "MWF 11:40am-12:35pm")
 
-        // Mock connector to return these courses
-        whenever(connector.getCourseByInfo(any<com.tomdh.courseapi.course.CourseByInfoInput>())).thenAnswer { invocation ->
-            val req = invocation.arguments[0] as com.tomdh.courseapi.course.CourseByInfoInput
+        whenever(connector.queryCourses(any())).thenAnswer { invocation ->
+            val filters = invocation.arguments[0] as Map<*, *>
+            val subjects = filters["subject"] as? List<*>
             when {
-                req.subject?.contains("CSE") == true -> listOf(cseCourse)
-                req.subject?.contains("MTH") == true -> listOf(mthCourse)
-                else -> emptyList<Course>()
+                subjects?.contains("CSE") == true -> listOf(cseSection)
+                subjects?.contains("MTH") == true -> listOf(mthSection)
+                else -> emptyList<SchedulableSection>()
             }
         }
 
         val result = combinator.getScheduleByCourses(input, connector)
-        
+
         assertEquals(1, result.size)
-        assertEquals(2, result[0].courses.size)
+        assertEquals(2, result[0].sections.size)
     }
 
     @Test
     fun `getScheduleByCourses throws QueryException when a requested course is not found`() = runBlocking {
-        val input = ScheduleByCourseInput(
-            school = "miami", term = "202410", campus = listOf("O"),
+        val input = ScheduleQueryInput(
+            school = "miami",
+            filters = mapOf("term" to "202410", "campus" to listOf("O")),
             courses = listOf("CSE 271", "ENG 111")
         )
 
-        val cseCourse = Course(subject = "CSE", courseNum = "271", crn = 1)
-        
-        // Mock to return CSE but not ENG
-        whenever(connector.getCourseByInfo(any<com.tomdh.courseapi.course.CourseByInfoInput>())).thenAnswer { invocation ->
-            val req = invocation.arguments[0] as com.tomdh.courseapi.course.CourseByInfoInput
-            if (req.subject?.contains("CSE") == true) listOf(cseCourse) else emptyList<Course>()
+        val cseSection = section("CSE", "271", "MWF 10:05am-11:00am")
+
+        whenever(connector.queryCourses(any())).thenAnswer { invocation ->
+            val filters = invocation.arguments[0] as Map<*, *>
+            val subjects = filters["subject"] as? List<*>
+            if (subjects?.contains("CSE") == true) listOf(cseSection) else emptyList<SchedulableSection>()
         }
 
         assertThrows<QueryException> {
@@ -80,28 +84,23 @@ class ScheduleCombinatorTests {
     }
 
     @Test
-    fun `getFillerByAttributes finds valid fillers`() = runBlocking {
-        val input = FillerByAttributesInput(
-            school = "miami", term = "202410", campus = listOf("O"),
-            courses = listOf("CSE 271"), attributes = listOf("PA1C")
+    fun `getFillerSchedules finds valid fillers`() = runBlocking {
+        val input = ScheduleQueryInput(
+            school = "miami",
+            filters = mapOf("term" to "202410", "campus" to listOf("O")),
+            courses = listOf("CSE 271"),
+            fillerFilters = mapOf("attributes" to listOf("PA1C"))
         )
 
-        val cseCourse = Course(
-            subject = "CSE", courseNum = "271", crn = 1,
-            delivery = "MWF 10:05 am-11:00 am"
-        )
-        val fillerCourse = Course(
-            subject = "ENG", courseNum = "111", crn = 2,
-            delivery = "TR 10:05 am-11:00 am"
-        )
+        val cseSection = section("CSE", "271", "MWF 10:05am-11:00am")
+        val fillerSection = section("ENG", "111", "TR 10:05am-11:00am")
 
-        whenever(connector.getCourseByInfo(any<com.tomdh.courseapi.course.CourseByInfoInput>())).thenReturn(listOf(cseCourse))
-        whenever(cache.fetchAttributes(any())).thenReturn(listOf(fillerCourse))
+        whenever(connector.queryCourses(any())).thenReturn(listOf(cseSection))
+        whenever(cache.fetchFillerCourses(any(), any())).thenReturn(listOf(fillerSection))
 
-        val result = combinator.getFillerByAttributes(input, connector)
-        
-        // Since filler is on TR and core course is on MWF, they do not conflict.
+        val result = combinator.getFillerSchedules(input, connector)
+
         assertEquals(1, result.size)
-        assertTrue(result[0].courses.any { it.crn == 2 })
+        assertTrue(result[0].sections.any { it.name.contains("ENG") })
     }
 }

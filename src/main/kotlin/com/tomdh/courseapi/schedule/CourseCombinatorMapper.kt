@@ -1,39 +1,40 @@
 package com.tomdh.courseapi.schedule
 
-import com.tomdh.courseapi.course.Course
+import com.tomdh.courseapi.course.SchedulableSection
 import com.tomdh.intervalcombinator.model.CombinatorItem
-import com.tomdh.intervalcombinator.model.TimeWindow
+import java.time.LocalTime
 
+/**
+ * Maps [SchedulableSection]s (with pre-parsed canonical time windows)
+ * into [CombinatorItem]s for the IntervalCombinator.
+ *
+ * No longer Miami-specific — works with any school's data since
+ * time windows are already in canonical format.
+ */
 object CourseCombinatorMapper {
 
-    private val timeSlotRegex = Regex(
-        """([MTWRFSU]+)\s+(\d{1,2}:\d\d[ap]m)-(\d{1,2}:\d\d[ap]m)""",
-        RegexOption.IGNORE_CASE
-    )
+    private val timeFormatter = java.time.format.DateTimeFormatterBuilder()
+        .parseCaseInsensitive()
+        .appendPattern("h:mma")
+        .toFormatter()
 
-    fun mapToCombinatorGroup(courses: List<Course>): List<CombinatorItem<Course>> {
-        return courses.map { course ->
-            val windows = mutableListOf<TimeWindow>()
-            val slot = course.delivery
-            val matches = timeSlotRegex
-                .findAll(slot)
-                .toList()
+    private fun parseTime(time: String): LocalTime {
+        return LocalTime.parse(time.replace(" ", ""), timeFormatter)
+    }
 
-            for ((i, m) in matches.withIndex()) {
-                val (_, daysStr, startTime, endTime) = m.groupValues
-                val segmentEnd = if (i + 1 < matches.size) matches[i + 1].range.first else slot.length
-                val afterText = slot.substring(m.range.last + 1, segmentEnd)
-
-                val hasDateRange = afterText.contains(Regex("""\d{2}/\d{2}\s*-\s*\d{2}/\d{2}"""))
-                val hasSingleDate = afterText.contains(Regex("""\d{2}/\d{2}"""))
-                if (hasSingleDate && !hasDateRange) continue
-
-                for (dayChar in daysStr) {
-                    try { windows.add(TimeWindow.parse(dayChar, startTime, endTime)) } catch (_: Exception) { }
-                }
+    fun mapToCombinatorGroup(sections: List<SchedulableSection>): List<CombinatorItem<SchedulableSection>> {
+        return sections.map { section ->
+            val windows = section.timeWindows.mapNotNull { tw ->
+                try {
+                    val day = java.time.DayOfWeek.valueOf(tw.day)
+                    com.tomdh.intervalcombinator.model.TimeWindow(
+                        day,
+                        parseTime(tw.startTime),
+                        parseTime(tw.endTime)
+                    )
+                } catch (_: Exception) { null }
             }
-
-            CombinatorItem(payload = course, windows = windows)
+            CombinatorItem(payload = section, windows = windows)
         }
     }
 }

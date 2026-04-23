@@ -2,7 +2,7 @@
 A schedule consisting of non-conflicting course sections.
 """
 type Schedule {
-    courses: [Course!]!
+    sections: [CourseSection!]!
     freeTime: Int!
 }
 

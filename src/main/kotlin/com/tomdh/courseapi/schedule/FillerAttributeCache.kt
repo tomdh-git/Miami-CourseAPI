@@ -1,27 +1,19 @@
 package com.tomdh.courseapi.schedule
 
-import com.tomdh.courseapi.course.Course
-import com.tomdh.courseapi.course.CourseByInfoInput
-import com.tomdh.courseapi.school.SchoolRegistry
-import org.slf4j.LoggerFactory
-import org.springframework.cache.annotation.Cacheable
-import org.springframework.stereotype.Component
+@org.springframework.stereotype.Component
+class FillerAttributeCache {
+    private val logger = org.slf4j.LoggerFactory.getLogger(FillerAttributeCache::class.java)
 
-@Component
-class FillerAttributeCache(private val registry: SchoolRegistry) {
-    private val logger = LoggerFactory.getLogger(FillerAttributeCache::class.java)
-
-    @Cacheable("fillerAttributes")
-    suspend fun fetchAttributes(input: FillerByAttributesInput): List<Course> {
-        logger.info("Cache miss for filler attributes. Fetching combinations...")
-        val startEndTime = if (input.preferredStart != null && input.preferredEnd != null) {
-            listOf(input.preferredStart, input.preferredEnd)
-        } else null
-
-        val connector = registry.getConnector(input.school)
-        return connector.getCourseByInfo(CourseByInfoInput(
-            school = input.school, campus = input.campus, term = input.term,
-            attributes = input.attributes, delivery = input.delivery, startEndTime = startEndTime
-        ))
+    /**
+     * Fetches filler courses using the school connector and the provided filler filters.
+     * Results are cached by the filter map to avoid repeated upstream calls.
+     */
+    @org.springframework.cache.annotation.Cacheable(value = ["fillerAttributes"], key = "{#connector.schoolId, #fillerFilters}")
+    suspend fun fetchFillerCourses(
+        connector: com.tomdh.courseapi.school.SchoolConnector,
+        fillerFilters: Map<String, Any?>
+    ): List<com.tomdh.courseapi.course.SchedulableSection> {
+        logger.info("Cache miss for filler courses. Fetching from {}...", connector.schoolId)
+        return connector.queryCourses(fillerFilters)
     }
 }
