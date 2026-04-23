@@ -52,7 +52,12 @@ class MiamiConnector(
             throw QueryException("Query returned too many results.")
         }
 
-        return resp.body.parseMiamiCoursesToSections()
+        val courses = resp.body.parseMiamiCoursesToSections()
+        for (course in courses) {
+            val temp = course.data + ("details" to client.getCourseDetails(filters["term"].toString(), course.data["crn"].toString()))
+            course.data = temp
+        }
+        return courses
     }
 
     override suspend fun validateFilters(filters: Map<String, Any?>): List<String> {

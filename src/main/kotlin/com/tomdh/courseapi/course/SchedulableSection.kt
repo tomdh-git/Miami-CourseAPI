@@ -15,7 +15,7 @@ data class SchedulableSection(
     val timeWindows: List<CanonicalTimeWindow>,
 
     /** The original school-specific data, preserved as a JSON map */
-    val data: Map<String, Any?>
+    var data: Map<String, Any?>
 )
 
 /**

@@ -1,5 +1,7 @@
 package com.tomdh.courseapi.school.miami
 
+import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.tomdh.courseapi.exceptions.types.ServerBusyException
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
@@ -125,6 +127,24 @@ class MiamiClient(
             lastToken = token
             lastTokenTs = againNow
             token
+        }
+    }
+
+    suspend fun getCourseDetails(term: String, crn: String): JsonNode {
+        val mapper = jacksonObjectMapper()
+        val uri = "${config.url}sectionDetail/${term}/${crn}"
+        return htmlCacheLock.withLock {
+            val result = webClient.get()
+                .uri(uri)
+                .header("Accept", "application/json")
+                .header("User-Agent", "Mozilla/5.0")
+                .exchangeToMono { response ->
+                    response.cookies().forEach { (name, cookieList) ->
+                        if (cookieList.isNotEmpty()) cookies[name] = cookieList[0].value
+                    }
+                    response.bodyToMono(String::class.java)
+                }.awaitSingle()
+            mapper.readTree(result)
         }
     }
 

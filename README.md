@@ -262,8 +262,7 @@ http://localhost:8080/graphql
 
 ## Example Queries
 
-### [getCourseByInfo](https://github.com/tomdh-git/Miami-CourseAPI/blob/master/example_queries/getCourseByInfo.md)
-### [getCourseByCRN](https://github.com/tomdh-git/Miami-CourseAPI/blob/master/example_queries/getCourseByCRN.md)
-### [getScheduleByCourses](https://github.com/tomdh-git/Miami-CourseAPI/blob/master/example_queries/getScheduleByCourses.md)
-### [getFillerByAttributes](https://github.com/tomdh-git/Miami-CourseAPI/blob/master/example_queries/getFillerByAttributes.md)
+### [getCourses](https://github.com/tomdh-git/Miami-CourseAPI/blob/master/example_queries/getCourses.md)
+### [getSchedules](https://github.com/tomdh-git/Miami-CourseAPI/blob/master/example_queries/getSchedules.md)
+### [getSchoolSchema](https://github.com/tomdh-git/Miami-CourseAPI/blob/master/example_queries/getSchoolSchema.md)
 ### [getTerms](https://github.com/tomdh-git/Miami-CourseAPI/blob/master/example_queries/getTerms.md)

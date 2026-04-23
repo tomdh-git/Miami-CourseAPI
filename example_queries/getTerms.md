@@ -1,10 +1,8 @@
-# getTerms
-For querying for all possible terms and staying up to date!
+# Query: getTerms
 
-Accepted Fields:
-* school (Ex: `"miami"`, `"ucla"`)
+This query retrieves a historical list of academic terms dynamically extracted from a school's registration backend.
 
-```bash
+```graphql
 query {
   getTerms(school: "miami") {
     ... on SuccessField {
@@ -19,4 +17,18 @@ query {
   }
 }
 ```
-This request is querying for every possible term name. This will give every name from `"202630"` (`Summer 2026`) to `"201810"` (`Fall 2018`)!
+
+**Example JSON ResponseSegment**:
+```json
+{
+  "data": {
+    "getTerms": {
+      "fields": [
+        { "name": "" },
+        { "name": "202710" },
+        { "name": "202630" }
+      ]
+    }
+  }
+}
+```

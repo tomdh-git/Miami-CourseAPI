@@ -40,16 +40,48 @@ class ScheduleResolverTests {
     }
 
     @Test
-    fun `getSchedules returns ErrorSchedule on failure`() = runBlocking {
+    fun `getSchedules returns ErrorSchedule for validation`() = runBlocking {
         val input = ScheduleQueryInput(
             school = "miami",
             filters = mapOf("term" to "202410", "campus" to listOf("O")),
             courses = listOf("CSE 271")
         )
-        whenever(service.getSchedules(input)).thenThrow(IllegalArgumentException("Invalid"))
+        whenever(service.getSchedules(input)).thenThrow(com.tomdh.courseapi.exceptions.ValidationException("Invalid mapping constraint"))
 
         val result = resolver.getSchedules(input, limit = null)
 
         assertTrue(result is ErrorSchedule)
+        assertEquals("VALIDATION_ERROR", (result as ErrorSchedule).error)
     }
+
+    @Test
+    fun `getSchedules returns ErrorSchedule for query execution`() = runBlocking {
+        val input = ScheduleQueryInput(
+            school = "miami",
+            filters = mapOf("term" to "202410"),
+            courses = listOf()
+        )
+        whenever(service.getSchedules(input)).thenThrow(com.tomdh.courseapi.exceptions.QueryException("Missing combination paths generated"))
+
+        val result = resolver.getSchedules(input, limit = null)
+
+        assertTrue(result is ErrorSchedule)
+        assertEquals("QUERY_ERROR", (result as ErrorSchedule).error)
+    }
+
+    @Test
+    fun `getSchedules returns ErrorSchedule for api parsing logic outage`() = runBlocking {
+        val input = ScheduleQueryInput(
+            school = "miami",
+            filters = mapOf("term" to "202410"),
+            courses = listOf("CSE 271")
+        )
+        whenever(service.getSchedules(input)).thenThrow(com.tomdh.courseapi.exceptions.ApiException("Connector API failure logic timed out upstream"))
+
+        val result = resolver.getSchedules(input, limit = null)
+
+        assertTrue(result is ErrorSchedule)
+        assertEquals("API_ERROR", (result as ErrorSchedule).error)
+    }
+
 }

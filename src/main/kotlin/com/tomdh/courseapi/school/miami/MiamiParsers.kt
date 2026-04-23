@@ -79,7 +79,8 @@ fun String.parseMiamiCoursesToSections(): List<SchedulableSection> {
             "credits" to credits,
             "capacity" to capacity,
             "requests" to requests,
-            "delivery" to delivery
+            "delivery" to delivery,
+            "details" to ""
         )
 
         SchedulableSection(
