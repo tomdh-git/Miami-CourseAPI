@@ -46,7 +46,7 @@ class ScheduleResolverTests {
             filters = mapOf("term" to "202410", "campus" to listOf("O")),
             courses = listOf("CSE 271")
         )
-        whenever(service.getSchedules(input)).thenThrow(com.tomdh.courseapi.exceptions.ValidationException("Invalid mapping constraint"))
+        whenever(service.getSchedules(input)).thenThrow(com.tomdh.courseapi.exceptions.types.ValidationException(listOf("Invalid mapping constraint")))
 
         val result = resolver.getSchedules(input, limit = null)
 
@@ -61,7 +61,7 @@ class ScheduleResolverTests {
             filters = mapOf("term" to "202410"),
             courses = listOf()
         )
-        whenever(service.getSchedules(input)).thenThrow(com.tomdh.courseapi.exceptions.QueryException("Missing combination paths generated"))
+        whenever(service.getSchedules(input)).thenThrow(com.tomdh.courseapi.exceptions.types.QueryException("Missing combination paths generated"))
 
         val result = resolver.getSchedules(input, limit = null)
 
@@ -76,7 +76,7 @@ class ScheduleResolverTests {
             filters = mapOf("term" to "202410"),
             courses = listOf("CSE 271")
         )
-        whenever(service.getSchedules(input)).thenThrow(com.tomdh.courseapi.exceptions.ApiException("Connector API failure logic timed out upstream"))
+        whenever(service.getSchedules(input)).thenThrow(com.tomdh.courseapi.exceptions.types.APIException("Connector API failure logic timed out upstream"))
 
         val result = resolver.getSchedules(input, limit = null)
 

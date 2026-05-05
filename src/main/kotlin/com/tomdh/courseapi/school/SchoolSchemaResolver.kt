@@ -1,13 +1,16 @@
 package com.tomdh.courseapi.school
 
-import com.tomdh.courseapi.exceptions.toErrorResponse
+import com.netflix.graphql.dgs.DgsComponent
+import com.netflix.graphql.dgs.DgsQuery
 import com.netflix.graphql.dgs.InputArgument
+import com.tomdh.courseapi.exceptions.toErrorResponse
+import org.slf4j.LoggerFactory
 
-@com.netflix.graphql.dgs.DgsComponent
+@DgsComponent
 class SchoolSchemaResolver(private val registry: SchoolRegistry) {
-    private val logger = org.slf4j.LoggerFactory.getLogger(SchoolSchemaResolver::class.java)
+    private val logger = LoggerFactory.getLogger(SchoolSchemaResolver::class.java)
 
-    @com.netflix.graphql.dgs.DgsQuery
+    @DgsQuery
     fun getSchoolSchema(@InputArgument school: String): SchoolSchemaResult {
         return try {
             val connector = registry.getConnector(school)

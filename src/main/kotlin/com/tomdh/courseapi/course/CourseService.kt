@@ -1,12 +1,15 @@
 package com.tomdh.courseapi.course
 
-import com.tomdh.courseapi.exceptions.types.ValidationException
 import com.tomdh.courseapi.exceptions.types.QueryException
+import com.tomdh.courseapi.exceptions.types.ValidationException
+import com.tomdh.courseapi.school.SchoolRegistry
+import org.springframework.cache.annotation.Cacheable
+import org.springframework.stereotype.Service
 
-@org.springframework.stereotype.Service
-class CourseService(private val registry: com.tomdh.courseapi.school.SchoolRegistry) {
+@Service
+class CourseService(private val registry: SchoolRegistry) {
 
-    @org.springframework.cache.annotation.Cacheable(value = ["courses"], key = "{#school, #filters, #limit}")
+    @Cacheable(value = ["courses"], key = "{#school, #filters, #limit}")
     suspend fun getCourses(school: String, filters: Map<String, Any?>, limit: Int): List<SchedulableSection> {
         val connector = registry.getConnector(school)
 

@@ -27,6 +27,9 @@ dependencyManagement {
 }
 
 dependencies {
+    // School Connector Library (transitively brings in session-aware-web-client)
+    implementation("com.github.tomdh-git:school-connector:master-SNAPSHOT")
+
     // GraphQL - Netflix DGS
     implementation("com.netflix.graphql.dgs:graphql-dgs-spring-graphql-starter")
     implementation("com.graphql-java:graphql-java-extended-scalars:22.0")
@@ -46,7 +49,7 @@ dependencies {
     implementation("com.github.ben-manes.caffeine:caffeine")
 
     // HTML Parsing
-    implementation("org.jsoup:jsoup:1.17.2")
+    // implementation("org.jsoup:jsoup:1.17.2") // Now handled by school-connector
 
     // Actuator
     implementation("org.springframework.boot:spring-boot-starter-actuator")

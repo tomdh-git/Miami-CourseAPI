@@ -7,10 +7,11 @@ import com.tomdh.intervalcombinator.dsl.IntervalCombinator
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
+import org.springframework.stereotype.Component
 import java.time.LocalTime
 import java.time.format.DateTimeFormatterBuilder
 
-@org.springframework.stereotype.Component
+@Component
 class ScheduleCombinator(private val cache: FillerAttributeCache) {
 
     private val timeFormatter = DateTimeFormatterBuilder()

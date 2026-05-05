@@ -1,13 +1,16 @@
 package com.tomdh.courseapi.field
 
-import com.tomdh.courseapi.exceptions.resolveQuery
+import com.netflix.graphql.dgs.DgsComponent
+import com.netflix.graphql.dgs.DgsQuery
 import com.netflix.graphql.dgs.InputArgument
+import com.tomdh.courseapi.exceptions.resolveQuery
+import org.slf4j.LoggerFactory
 
-@com.netflix.graphql.dgs.DgsComponent
+@DgsComponent
 class FieldResolver(private val service: FieldService) {
-    private val logger = org.slf4j.LoggerFactory.getLogger(FieldResolver::class.java)
+    private val logger = LoggerFactory.getLogger(FieldResolver::class.java)
 
-    @com.netflix.graphql.dgs.DgsQuery
+    @DgsQuery
     suspend fun getTerms(@InputArgument school: String): FieldResult {
         return resolveQuery(logger, ::ErrorField) {
             SuccessField(service.getTerms(school))

@@ -1,13 +1,16 @@
 package com.tomdh.courseapi.course
 
-import com.tomdh.courseapi.exceptions.resolveQuery
+import com.netflix.graphql.dgs.DgsComponent
+import com.netflix.graphql.dgs.DgsQuery
 import com.netflix.graphql.dgs.InputArgument
+import com.tomdh.courseapi.exceptions.resolveQuery
+import org.slf4j.LoggerFactory
 
-@com.netflix.graphql.dgs.DgsComponent
+@DgsComponent
 class CourseResolver(private val service: CourseService) {
-    private val logger = org.slf4j.LoggerFactory.getLogger(CourseResolver::class.java)
+    private val logger = LoggerFactory.getLogger(CourseResolver::class.java)
 
-    @com.netflix.graphql.dgs.DgsQuery
+    @DgsQuery
     suspend fun getCourses(
         @InputArgument input: CourseQueryInput,
         @InputArgument limit: Int?

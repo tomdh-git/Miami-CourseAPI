@@ -1,16 +1,17 @@
 package com.tomdh.courseapi.config
 
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Configuration
+import org.springframework.web.servlet.config.annotation.CorsRegistry
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer
 
-@org.springframework.context.annotation.Configuration
+@Configuration
 class CorsConfig {
 
-    @org.springframework.context.annotation.Bean
+    @Bean
     fun corsConfigurer(): WebMvcConfigurer {
         return object : WebMvcConfigurer {
-            override fun addCorsMappings(
-                registry: org.springframework.web.servlet.config.annotation.CorsRegistry
-            ) {
+            override fun addCorsMappings(registry: CorsRegistry) {
                 registry.addMapping("/**")
                     .allowedOrigins("*")
                     .allowedMethods("*")

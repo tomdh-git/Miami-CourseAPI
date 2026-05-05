@@ -2,7 +2,10 @@ package com.tomdh.courseapi.schedule
 
 import com.tomdh.courseapi.course.SchedulableSection
 import com.tomdh.intervalcombinator.model.CombinatorItem
+import com.tomdh.intervalcombinator.model.TimeWindow
+import java.time.DayOfWeek
 import java.time.LocalTime
+import java.time.format.DateTimeFormatterBuilder
 
 /**
  * Maps [SchedulableSection]s (with pre-parsed canonical time windows)
@@ -13,7 +16,7 @@ import java.time.LocalTime
  */
 object CourseCombinatorMapper {
 
-    private val timeFormatter = java.time.format.DateTimeFormatterBuilder()
+    private val timeFormatter = DateTimeFormatterBuilder()
         .parseCaseInsensitive()
         .appendPattern("h:mma")
         .toFormatter()
@@ -26,8 +29,8 @@ object CourseCombinatorMapper {
         return sections.map { section ->
             val windows = section.timeWindows.mapNotNull { tw ->
                 try {
-                    val day = java.time.DayOfWeek.valueOf(tw.day)
-                    com.tomdh.intervalcombinator.model.TimeWindow(
+                    val day = DayOfWeek.valueOf(tw.day)
+                    TimeWindow(
                         day,
                         parseTime(tw.startTime),
                         parseTime(tw.endTime)

@@ -1,11 +1,13 @@
 package com.tomdh.courseapi.schedule
 
+import com.tomdh.courseapi.course.SchedulableSection
+
 sealed interface ScheduleResult
 data class SuccessSchedule(val schedules: List<Schedule>) : ScheduleResult
 data class ErrorSchedule(val error: String, val message: String) : ScheduleResult
 
 data class Schedule(
-    val sections: List<com.tomdh.courseapi.course.SchedulableSection>,
+    val sections: List<SchedulableSection>,
     val freeTime: Int
 )
 
