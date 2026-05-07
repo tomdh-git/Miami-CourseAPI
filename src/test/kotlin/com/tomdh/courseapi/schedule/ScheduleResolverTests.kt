@@ -1,7 +1,9 @@
 package com.tomdh.courseapi.schedule
 
-import com.tomdh.courseapi.course.CanonicalTimeWindow
-import com.tomdh.courseapi.course.SchedulableSection
+import com.tomdh.schoolconnector.course.CanonicalTimeWindow
+import com.tomdh.schoolconnector.course.SchedulableSection
+import com.tomdh.schoolconnector.exceptions.types.APIException
+import com.tomdh.schoolconnector.exceptions.types.QueryException
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -61,7 +63,7 @@ class ScheduleResolverTests {
             filters = mapOf("term" to "202410"),
             courses = listOf()
         )
-        whenever(service.getSchedules(input)).thenThrow(com.tomdh.courseapi.exceptions.types.QueryException("Missing combination paths generated"))
+        whenever(service.getSchedules(input)).thenThrow(QueryException("Missing combination paths generated"))
 
         val result = resolver.getSchedules(input, limit = null)
 
@@ -76,7 +78,7 @@ class ScheduleResolverTests {
             filters = mapOf("term" to "202410"),
             courses = listOf("CSE 271")
         )
-        whenever(service.getSchedules(input)).thenThrow(com.tomdh.courseapi.exceptions.types.APIException("Connector API failure logic timed out upstream"))
+        whenever(service.getSchedules(input)).thenThrow(APIException("Connector API failure logic timed out upstream"))
 
         val result = resolver.getSchedules(input, limit = null)
 

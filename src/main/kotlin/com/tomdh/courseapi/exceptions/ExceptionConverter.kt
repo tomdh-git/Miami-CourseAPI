@@ -1,6 +1,7 @@
 package com.tomdh.courseapi.exceptions
 
-import com.tomdh.courseapi.exceptions.types.*
+import com.tomdh.courseapi.exceptions.types.ValidationException
+import com.tomdh.schoolconnector.exceptions.types.*
 import org.slf4j.Logger
 
 fun Throwable.toErrorResponse(logger: Logger): Pair<String, String> {

@@ -1,5 +1,7 @@
 package com.tomdh.courseapi.course
 
+import com.tomdh.schoolconnector.course.SchedulableSection
+
 /**
  * GraphQL input wrapper. DGS maps the JSON scalar to Map<String, Any?>.
  */

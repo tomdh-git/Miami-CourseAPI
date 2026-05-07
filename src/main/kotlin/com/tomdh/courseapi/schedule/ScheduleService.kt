@@ -1,7 +1,7 @@
 package com.tomdh.courseapi.schedule
 
 import com.tomdh.courseapi.exceptions.types.ValidationException
-import com.tomdh.courseapi.school.SchoolRegistry
+import com.tomdh.schoolconnector.school.SchoolRegistry
 import org.springframework.cache.annotation.Cacheable
 import org.springframework.stereotype.Service
 

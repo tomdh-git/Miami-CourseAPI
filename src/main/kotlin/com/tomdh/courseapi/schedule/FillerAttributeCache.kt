@@ -1,7 +1,7 @@
 package com.tomdh.courseapi.schedule
 
-import com.tomdh.courseapi.course.SchedulableSection
-import com.tomdh.courseapi.school.SchoolConnector
+import com.tomdh.schoolconnector.course.SchedulableSection
+import com.tomdh.schoolconnector.school.SchoolConnector
 import org.slf4j.LoggerFactory
 import org.springframework.cache.annotation.Cacheable
 import org.springframework.stereotype.Component

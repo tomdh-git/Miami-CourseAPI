@@ -1,7 +1,9 @@
 package com.tomdh.courseapi.course
 
-import com.tomdh.courseapi.school.SchoolConnector
-import com.tomdh.courseapi.school.SchoolRegistry
+import com.tomdh.schoolconnector.course.CanonicalTimeWindow
+import com.tomdh.schoolconnector.course.SchedulableSection
+import com.tomdh.schoolconnector.school.SchoolConnector
+import com.tomdh.schoolconnector.school.SchoolRegistry
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.*

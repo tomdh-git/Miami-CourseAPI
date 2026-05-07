@@ -1,6 +1,6 @@
 package com.tomdh.courseapi.schedule
 
-import com.tomdh.courseapi.course.SchedulableSection
+import com.tomdh.schoolconnector.course.SchedulableSection
 
 sealed interface ScheduleResult
 data class SuccessSchedule(val schedules: List<Schedule>) : ScheduleResult

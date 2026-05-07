@@ -1,5 +1,6 @@
 package com.tomdh.courseapi.field
 
+import com.tomdh.schoolconnector.field.Field
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue

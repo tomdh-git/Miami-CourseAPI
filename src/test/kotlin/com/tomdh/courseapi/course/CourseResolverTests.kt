@@ -1,5 +1,9 @@
 package com.tomdh.courseapi.course
 
+import com.tomdh.schoolconnector.course.CanonicalTimeWindow
+import com.tomdh.schoolconnector.course.SchedulableSection
+import com.tomdh.schoolconnector.exceptions.types.APIException
+import com.tomdh.schoolconnector.exceptions.types.QueryException
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -47,7 +51,7 @@ class CourseResolverTests {
     @Test
     fun `getCourses returns ErrorCourse on failure for query execution`() = runBlocking {
         val input = CourseQueryInput(school = "miami", filters = mapOf("term" to "202410"))
-        whenever(service.getCourses(any(), any(), any())).thenThrow(com.tomdh.courseapi.exceptions.types.QueryException("No matching course block"))
+        whenever(service.getCourses(any(), any(), any())).thenThrow(QueryException("No matching course block"))
 
         val result = resolver.getCourses(input, limit = 10)
 
@@ -58,7 +62,7 @@ class CourseResolverTests {
     @Test
     fun `getCourses returns ErrorCourse on backend api or parsing failure`() = runBlocking {
         val input = CourseQueryInput(school = "miami", filters = mapOf("term" to "202410"))
-        whenever(service.getCourses(any(), any(), any())).thenThrow(com.tomdh.courseapi.exceptions.types.APIException("Connection socket timeout simulated backend outage"))
+        whenever(service.getCourses(any(), any(), any())).thenThrow(APIException("Connection socket timeout simulated backend outage"))
 
         val result = resolver.getCourses(input, limit = 10)
 

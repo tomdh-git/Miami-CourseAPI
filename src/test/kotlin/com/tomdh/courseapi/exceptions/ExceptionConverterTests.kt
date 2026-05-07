@@ -1,6 +1,9 @@
 package com.tomdh.courseapi.exceptions
 
 import com.tomdh.courseapi.exceptions.types.*
+import com.tomdh.schoolconnector.exceptions.types.APIException
+import com.tomdh.schoolconnector.exceptions.types.QueryException
+import com.tomdh.schoolconnector.exceptions.types.ServerBusyException
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.mock

@@ -1,8 +1,9 @@
 package com.tomdh.courseapi.course
 
-import com.tomdh.courseapi.exceptions.types.QueryException
 import com.tomdh.courseapi.exceptions.types.ValidationException
-import com.tomdh.courseapi.school.SchoolRegistry
+import com.tomdh.schoolconnector.course.SchedulableSection
+import com.tomdh.schoolconnector.exceptions.types.QueryException
+import com.tomdh.schoolconnector.school.SchoolRegistry
 import org.springframework.cache.annotation.Cacheable
 import org.springframework.stereotype.Service
 

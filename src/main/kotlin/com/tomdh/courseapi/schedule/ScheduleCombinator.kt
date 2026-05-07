@@ -1,8 +1,8 @@
 package com.tomdh.courseapi.schedule
 
-import com.tomdh.courseapi.course.SchedulableSection
-import com.tomdh.courseapi.exceptions.types.QueryException
-import com.tomdh.courseapi.school.SchoolConnector
+import com.tomdh.schoolconnector.course.SchedulableSection
+import com.tomdh.schoolconnector.exceptions.types.QueryException
+import com.tomdh.schoolconnector.school.SchoolConnector
 import com.tomdh.intervalcombinator.dsl.IntervalCombinator
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll

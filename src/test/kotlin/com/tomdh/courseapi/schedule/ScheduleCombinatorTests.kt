@@ -1,9 +1,9 @@
 package com.tomdh.courseapi.schedule
 
-import com.tomdh.courseapi.course.CanonicalTimeWindow
-import com.tomdh.courseapi.course.SchedulableSection
-import com.tomdh.courseapi.exceptions.types.QueryException
-import com.tomdh.courseapi.school.SchoolConnector
+import com.tomdh.schoolconnector.course.SchedulableSection
+import com.tomdh.schoolconnector.exceptions.types.QueryException
+import com.tomdh.schoolconnector.school.SchoolConnector
+import com.tomdh.schoolconnector.school.miami.parseMiamiDeliveryToTimeWindows
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
@@ -24,7 +24,7 @@ class ScheduleCombinatorTests {
     @InjectMocks lateinit var combinator: ScheduleCombinator
 
     private fun section(subject: String, num: String, delivery: String): SchedulableSection {
-        val timeWindows = com.tomdh.courseapi.school.miami.parseMiamiDeliveryToTimeWindows(delivery)
+        val timeWindows = parseMiamiDeliveryToTimeWindows(delivery)
         return SchedulableSection(
             name = "$subject $num",
             timeWindows = timeWindows,

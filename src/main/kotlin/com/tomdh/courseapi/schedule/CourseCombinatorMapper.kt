@@ -1,6 +1,6 @@
 package com.tomdh.courseapi.schedule
 
-import com.tomdh.courseapi.course.SchedulableSection
+import com.tomdh.schoolconnector.course.SchedulableSection
 import com.tomdh.intervalcombinator.model.CombinatorItem
 import com.tomdh.intervalcombinator.model.TimeWindow
 import java.time.DayOfWeek

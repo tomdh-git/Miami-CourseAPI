@@ -1,10 +1,10 @@
 package com.tomdh.courseapi.schedule
 
-import com.tomdh.courseapi.course.CanonicalTimeWindow
-import com.tomdh.courseapi.course.SchedulableSection
 import com.tomdh.courseapi.exceptions.types.ValidationException
-import com.tomdh.courseapi.school.SchoolConnector
-import com.tomdh.courseapi.school.SchoolRegistry
+import com.tomdh.schoolconnector.course.CanonicalTimeWindow
+import com.tomdh.schoolconnector.course.SchedulableSection
+import com.tomdh.schoolconnector.school.SchoolConnector
+import com.tomdh.schoolconnector.school.SchoolRegistry
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test

@@ -5,9 +5,9 @@ import org.springframework.boot.context.properties.ConfigurationPropertiesScan
 import org.springframework.boot.runApplication
 import org.springframework.cache.annotation.EnableCaching
 
-@SpringBootApplication
+@SpringBootApplication(scanBasePackages = ["com.tomdh.courseapi", "com.tomdh.schoolconnector", "com.tomdh.sessionawarewebclient"])
 @EnableCaching
-@ConfigurationPropertiesScan
+@ConfigurationPropertiesScan(basePackages = ["com.tomdh.courseapi", "com.tomdh.schoolconnector", "com.tomdh.sessionawarewebclient"])
 class CourseapiApplication
 
 fun main(args: Array<String>) {

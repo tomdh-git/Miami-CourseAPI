@@ -1,5 +1,7 @@
 package com.tomdh.courseapi.school
 
+import com.tomdh.schoolconnector.school.SchoolConnector
+import com.tomdh.schoolconnector.school.SchoolRegistry
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test

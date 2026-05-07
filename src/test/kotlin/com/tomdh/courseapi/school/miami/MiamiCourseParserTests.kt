@@ -1,5 +1,9 @@
 package com.tomdh.courseapi.school.miami
 
+import com.tomdh.schoolconnector.school.miami.parseMiamiCoursesToSections
+import com.tomdh.schoolconnector.school.miami.parseMiamiDeliveryToTimeWindows
+import com.tomdh.schoolconnector.school.miami.parseMiamiFields
+import com.tomdh.schoolconnector.school.miami.parseMiamiTerms
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
