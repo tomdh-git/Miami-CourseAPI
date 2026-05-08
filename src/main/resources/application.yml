@@ -26,6 +26,18 @@ management:
     health:
       show-details: always
 
+# ── CourseAPI application settings ──────────────────────────────────
+courseapi:
+  cache:
+    ttl-minutes: 60
+    max-size: 1000
+  graphql:
+    max-query-depth: 10
+    default-result-limit: 100
+  schedule:
+    max-combinator-results: 100
+
+# ── School connector settings ──────────────────────────────────────
 miami:
   api:
     url: ${MIAMI_API_URL:https://www.apps.miamioh.edu/courselist/}

@@ -1,5 +1,7 @@
 package com.tomdh.courseapi.field
 
+import com.tomdh.courseapi.generated.types.ErrorField
+import com.tomdh.courseapi.generated.types.SuccessField
 import com.tomdh.schoolconnector.field.Field
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals

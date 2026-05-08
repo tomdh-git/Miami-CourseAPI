@@ -1,6 +1,10 @@
 package com.tomdh.courseapi.schedule
 
+import com.tomdh.courseapi.config.CourseApiProperties
 import com.tomdh.courseapi.exceptions.types.ValidationException
+import com.tomdh.courseapi.generated.types.Schedule
+import com.tomdh.courseapi.generated.types.ScheduleQueryInput
+import com.tomdh.courseapi.schedule.combinator.ScheduleCombinator
 import com.tomdh.schoolconnector.course.CanonicalTimeWindow
 import com.tomdh.schoolconnector.course.SchedulableSection
 import com.tomdh.schoolconnector.school.SchoolConnector
@@ -10,26 +14,30 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.extension.ExtendWith
-import org.mockito.InjectMocks
 import org.mockito.Mock
 import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.kotlin.any
 import org.mockito.kotlin.whenever
 
+@Suppress("UNCHECKED_CAST")
 @ExtendWith(MockitoExtension::class)
 class ScheduleServiceTests {
 
     @Mock lateinit var schoolRegistry: SchoolRegistry
     @Mock lateinit var combinator: ScheduleCombinator
     @Mock lateinit var connector: SchoolConnector
+    private val properties = CourseApiProperties()
 
-    @InjectMocks lateinit var scheduleService: ScheduleService
+    private val scheduleService by lazy { DefaultScheduleService(combinator, schoolRegistry, properties) }
+
+    private fun filters(vararg pairs: Pair<String, Any?>): Object =
+        mapOf(*pairs) as Object
 
     @Test
     fun `getSchedules validates and returns schedules`() = runBlocking {
         val input = ScheduleQueryInput(
             school = "miami",
-            filters = mapOf("term" to "202410", "campus" to listOf("O")),
+            filters = filters("term" to "202410", "campus" to listOf("O")),
             courses = listOf("CSE 271")
         )
         val section = SchedulableSection(
@@ -53,9 +61,9 @@ class ScheduleServiceTests {
     fun `getSchedules with fillerFilters delegates to filler combinator`() = runBlocking {
         val input = ScheduleQueryInput(
             school = "miami",
-            filters = mapOf("term" to "202410", "campus" to listOf("O")),
+            filters = filters("term" to "202410", "campus" to listOf("O")),
             courses = listOf("CSE 271"),
-            fillerFilters = mapOf("attributes" to listOf("PA1C"))
+            fillerFilters = mapOf("attributes" to listOf("PA1C")) as Object
         )
         val section = SchedulableSection(
             name = "CSE 271 - OOP",
@@ -78,7 +86,7 @@ class ScheduleServiceTests {
     fun `getSchedules throws ValidationException when filters invalid`() = runBlocking {
         val input = ScheduleQueryInput(
             school = "miami",
-            filters = mapOf("term" to ""),
+            filters = filters("term" to ""),
             courses = listOf("CSE 271")
         )
 

@@ -1,0 +1,4 @@
+"""
+Custom scalar types used across the schema.
+"""
+scalar JSON

@@ -7,11 +7,18 @@ import com.tomdh.schoolconnector.school.SchoolRegistry
 import org.springframework.cache.annotation.Cacheable
 import org.springframework.stereotype.Service
 
+/**
+ * Contract for querying course sections from school connectors.
+ */
+interface CourseService {
+    suspend fun getCourses(school: String, filters: Map<String, Any?>, limit: Int): List<SchedulableSection>
+}
+
 @Service
-class CourseService(private val registry: SchoolRegistry) {
+class DefaultCourseService(private val registry: SchoolRegistry) : CourseService {
 
     @Cacheable(value = ["courses"], key = "{#school, #filters, #limit}")
-    suspend fun getCourses(school: String, filters: Map<String, Any?>, limit: Int): List<SchedulableSection> {
+    override suspend fun getCourses(school: String, filters: Map<String, Any?>, limit: Int): List<SchedulableSection> {
         val connector = registry.getConnector(school)
 
         val errors = connector.validateFilters(filters)

@@ -5,10 +5,10 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
 @Configuration
-class GraphQLConfig {
+class GraphQLConfig(private val properties: CourseApiProperties) {
 
     @Bean
     fun maxQueryDepthInstrumentation(): MaxQueryDepthInstrumentation {
-        return MaxQueryDepthInstrumentation(10)
+        return MaxQueryDepthInstrumentation(properties.graphql.maxQueryDepth)
     }
 }

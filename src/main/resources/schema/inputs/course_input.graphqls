@@ -1,5 +1,3 @@
-scalar JSON
-
 """
 Generic course query input. The 'filters' field is a school-specific JSON object.
 Use getSchoolSchema(school) to discover valid filter keys.

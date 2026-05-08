@@ -1,4 +1,4 @@
-package com.tomdh.courseapi.schedule
+package com.tomdh.courseapi.schedule.combinator
 
 import com.tomdh.schoolconnector.course.SchedulableSection
 import com.tomdh.intervalcombinator.model.CombinatorItem

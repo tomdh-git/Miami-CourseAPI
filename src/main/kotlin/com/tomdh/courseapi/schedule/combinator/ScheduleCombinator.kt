@@ -1,5 +1,8 @@
-package com.tomdh.courseapi.schedule
+package com.tomdh.courseapi.schedule.combinator
 
+import com.tomdh.courseapi.config.CourseApiProperties
+import com.tomdh.courseapi.generated.types.Schedule
+import com.tomdh.courseapi.generated.types.ScheduleQueryInput
 import com.tomdh.schoolconnector.course.SchedulableSection
 import com.tomdh.schoolconnector.exceptions.types.QueryException
 import com.tomdh.schoolconnector.school.SchoolConnector
@@ -12,7 +15,10 @@ import java.time.LocalTime
 import java.time.format.DateTimeFormatterBuilder
 
 @Component
-class ScheduleCombinator(private val cache: FillerAttributeCache) {
+class ScheduleCombinator(
+    private val cache: FillerAttributeCache,
+    private val properties: CourseApiProperties
+) {
 
     private val timeFormatter = DateTimeFormatterBuilder()
         .parseCaseInsensitive()
@@ -44,8 +50,11 @@ class ScheduleCombinator(private val cache: FillerAttributeCache) {
         input: ScheduleQueryInput,
         connector: SchoolConnector
     ): List<Schedule> {
+        @Suppress("UNCHECKED_CAST")
+        val filters = input.filters as Map<String, Any?>
+
         val parsedCourses = parseCourses(input.courses)
-        val fetched = fetchCourses(parsedCourses, input, connector)
+        val fetched = fetchCourses(parsedCourses, filters, connector)
         val valid = fetched.filterValues { it.isNotEmpty() }
 
         if (valid.size < parsedCourses.toSet().size) throw QueryException("Could not find valid sections for all requested courses")
@@ -62,12 +71,20 @@ class ScheduleCombinator(private val cache: FillerAttributeCache) {
             }
             algorithms {
                 optimizeFreeTime = input.optimizeFreeTime == true
-                maxResults = 100
+                maxResults = properties.schedule.maxCombinatorResults
             }
         }
 
         if (combinatorResults.isEmpty()) throw QueryException("No valid schedule combos found")
-        return combinatorResults.map { Schedule(sections = it.items, freeTime = it.freeTimeMinutes) }
+
+        val schedules = combinatorResults.map { Schedule(sections = it.items, freeTime = it.freeTimeMinutes) }
+
+        // Fetch details only for sections that appear in valid schedules
+        val term = filters["term"].toString()
+        val uniqueSections = schedules.flatMap { it.sections }.distinctBy { it.data["crn"] }
+        connector.fetchSectionDetails(term, uniqueSections)
+
+        return schedules
     }
 
     /**
@@ -78,7 +95,9 @@ class ScheduleCombinator(private val cache: FillerAttributeCache) {
         input: ScheduleQueryInput,
         connector: SchoolConnector
     ): List<Schedule> = coroutineScope {
-        val fillerFilters = input.fillerFilters ?: throw QueryException("fillerFilters required for filler search")
+        @Suppress("UNCHECKED_CAST")
+        val fillerFilters = input.fillerFilters as? Map<String, Any?>
+            ?: throw QueryException("fillerFilters required for filler search")
 
         val fillersDeferred = async { cache.fetchFillerCourses(connector, fillerFilters) }
         val schedulesDeferred = async { getScheduleByCourses(input, connector) }
@@ -103,22 +122,23 @@ class ScheduleCombinator(private val cache: FillerAttributeCache) {
 
     private suspend fun fetchCourses(
         parsed: List<Pair<String, String>>,
-        input: ScheduleQueryInput,
+        baseFilters: Map<String, Any?>,
         connector: SchoolConnector
     ): Map<Pair<String, String>, List<SchedulableSection>> = coroutineScope {
-        parsed.map { (subject, num) ->
+        val results: List<Pair<Pair<String, String>, List<SchedulableSection>>> = parsed.map { (subject, num) ->
             async {
                 // Build a per-course filter map by merging the base filters with the specific subject/courseNum
-                val courseFilters = input.filters.toMutableMap().apply {
+                val courseFilters = baseFilters.toMutableMap().apply {
                     put("subject", listOf(subject))
                     put("courseNum", num)
                 }
                 Pair(
                     Pair(subject, num),
-                    connector.queryCourses(courseFilters)
+                    connector.queryCoursesLight(courseFilters)
                 )
             }
         }.awaitAll()
+        results
             .groupBy({ it.first }, { it.second })
             .mapValues { it.value.flatten() }
     }

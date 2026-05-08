@@ -20,7 +20,7 @@ class FieldServiceTests {
     @Mock lateinit var registry: SchoolRegistry
     @Mock lateinit var connector: SchoolConnector
 
-    @InjectMocks lateinit var fieldService: FieldService
+    @InjectMocks lateinit var fieldService: DefaultFieldService
 
     @Test
     fun `getTerms returns fields provided by connector`() = runBlocking {

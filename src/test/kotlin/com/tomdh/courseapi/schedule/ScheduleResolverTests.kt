@@ -1,5 +1,10 @@
 package com.tomdh.courseapi.schedule
 
+import com.tomdh.courseapi.config.CourseApiProperties
+import com.tomdh.courseapi.generated.types.ErrorSchedule
+import com.tomdh.courseapi.generated.types.Schedule
+import com.tomdh.courseapi.generated.types.ScheduleQueryInput
+import com.tomdh.courseapi.generated.types.SuccessSchedule
 import com.tomdh.schoolconnector.course.CanonicalTimeWindow
 import com.tomdh.schoolconnector.course.SchedulableSection
 import com.tomdh.schoolconnector.exceptions.types.APIException
@@ -9,22 +14,27 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
-import org.mockito.InjectMocks
 import org.mockito.Mock
 import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.kotlin.whenever
 
+@Suppress("UNCHECKED_CAST")
 @ExtendWith(MockitoExtension::class)
 class ScheduleResolverTests {
 
     @Mock lateinit var service: ScheduleService
-    @InjectMocks lateinit var resolver: ScheduleResolver
+    private val properties = CourseApiProperties()
+
+    private val resolver by lazy { ScheduleResolver(service, properties) }
+
+    private fun filters(vararg pairs: Pair<String, Any?>): Object =
+        mapOf(*pairs) as Object
 
     @Test
     fun `getSchedules returns SuccessSchedule`() = runBlocking {
         val input = ScheduleQueryInput(
             school = "miami",
-            filters = mapOf("term" to "202410", "campus" to listOf("O")),
+            filters = filters("term" to "202410", "campus" to listOf("O")),
             courses = listOf("CSE 271")
         )
         val section = SchedulableSection(
@@ -45,7 +55,7 @@ class ScheduleResolverTests {
     fun `getSchedules returns ErrorSchedule for validation`() = runBlocking {
         val input = ScheduleQueryInput(
             school = "miami",
-            filters = mapOf("term" to "202410", "campus" to listOf("O")),
+            filters = filters("term" to "202410", "campus" to listOf("O")),
             courses = listOf("CSE 271")
         )
         whenever(service.getSchedules(input)).thenThrow(com.tomdh.courseapi.exceptions.types.ValidationException(listOf("Invalid mapping constraint")))
@@ -60,7 +70,7 @@ class ScheduleResolverTests {
     fun `getSchedules returns ErrorSchedule for query execution`() = runBlocking {
         val input = ScheduleQueryInput(
             school = "miami",
-            filters = mapOf("term" to "202410"),
+            filters = filters("term" to "202410"),
             courses = listOf()
         )
         whenever(service.getSchedules(input)).thenThrow(QueryException("Missing combination paths generated"))
@@ -75,7 +85,7 @@ class ScheduleResolverTests {
     fun `getSchedules returns ErrorSchedule for api parsing logic outage`() = runBlocking {
         val input = ScheduleQueryInput(
             school = "miami",
-            filters = mapOf("term" to "202410"),
+            filters = filters("term" to "202410"),
             courses = listOf("CSE 271")
         )
         whenever(service.getSchedules(input)).thenThrow(APIException("Connector API failure logic timed out upstream"))
@@ -85,5 +95,4 @@ class ScheduleResolverTests {
         assertTrue(result is ErrorSchedule)
         assertEquals("API_ERROR", (result as ErrorSchedule).error)
     }
-
 }

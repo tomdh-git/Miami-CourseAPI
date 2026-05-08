@@ -1,4 +1,4 @@
-package com.tomdh.courseapi.infra
+package com.tomdh.courseapi.config
 
 import org.springframework.boot.web.context.WebServerInitializedEvent
 import org.springframework.context.ApplicationListener

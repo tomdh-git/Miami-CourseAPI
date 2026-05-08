@@ -4,6 +4,9 @@ import com.netflix.graphql.dgs.DgsComponent
 import com.netflix.graphql.dgs.DgsQuery
 import com.netflix.graphql.dgs.InputArgument
 import com.tomdh.courseapi.exceptions.resolveQuery
+import com.tomdh.courseapi.generated.types.ErrorField
+import com.tomdh.courseapi.generated.types.FieldResult
+import com.tomdh.courseapi.generated.types.SuccessField
 import org.slf4j.LoggerFactory
 
 @DgsComponent

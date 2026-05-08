@@ -10,14 +10,14 @@ import java.util.concurrent.TimeUnit
 
 @Configuration
 @EnableCaching
-class CacheConfig {
+class CacheConfig(private val properties: CourseApiProperties) {
 
     @Bean
     fun cacheManager(): CacheManager {
         val caffeine = Caffeine.newBuilder()
-            .expireAfterWrite(1, TimeUnit.HOURS)
-            .maximumSize(1000)
-            
+            .expireAfterWrite(properties.cache.ttlMinutes, TimeUnit.MINUTES)
+            .maximumSize(properties.cache.maxSize)
+
         val cacheManager = CaffeineCacheManager(
             "courses",
             "schedules",

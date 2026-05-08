@@ -1,5 +1,9 @@
 package com.tomdh.courseapi.schedule
 
+import com.tomdh.courseapi.config.CourseApiProperties
+import com.tomdh.courseapi.generated.types.ScheduleQueryInput
+import com.tomdh.courseapi.schedule.combinator.FillerAttributeCache
+import com.tomdh.courseapi.schedule.combinator.ScheduleCombinator
 import com.tomdh.schoolconnector.course.SchedulableSection
 import com.tomdh.schoolconnector.exceptions.types.QueryException
 import com.tomdh.schoolconnector.school.SchoolConnector
@@ -9,19 +13,23 @@ import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.extension.ExtendWith
-import org.mockito.InjectMocks
 import org.mockito.Mock
 import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.kotlin.any
 import org.mockito.kotlin.whenever
 
+@Suppress("UNCHECKED_CAST")
 @ExtendWith(MockitoExtension::class)
 class ScheduleCombinatorTests {
 
     @Mock lateinit var cache: FillerAttributeCache
     @Mock lateinit var connector: SchoolConnector
+    private val properties = CourseApiProperties()
 
-    @InjectMocks lateinit var combinator: ScheduleCombinator
+    private val combinator by lazy { ScheduleCombinator(cache, properties) }
+
+    private fun filters(vararg pairs: Pair<String, Any?>): Object =
+        mapOf(*pairs) as Object
 
     private fun section(subject: String, num: String, delivery: String): SchedulableSection {
         val timeWindows = parseMiamiDeliveryToTimeWindows(delivery)
@@ -36,7 +44,7 @@ class ScheduleCombinatorTests {
     fun `getScheduleByCourses correctly combines courses and filters by time`() = runBlocking {
         val input = ScheduleQueryInput(
             school = "miami",
-            filters = mapOf("term" to "202410", "campus" to listOf("O")),
+            filters = filters("term" to "202410", "campus" to listOf("O")),
             courses = listOf("CSE 271", "MTH 251"),
             preferredStart = "9:00am",
             preferredEnd = "5:00pm",
@@ -46,7 +54,7 @@ class ScheduleCombinatorTests {
         val cseSection = section("CSE", "271", "MWF 10:05am-11:00am")
         val mthSection = section("MTH", "251", "MWF 11:40am-12:35pm")
 
-        whenever(connector.queryCourses(any())).thenAnswer { invocation ->
+        whenever(connector.queryCoursesLight(any())).thenAnswer { invocation ->
             val filters = invocation.arguments[0] as Map<*, *>
             val subjects = filters["subject"] as? List<*>
             when {
@@ -66,13 +74,13 @@ class ScheduleCombinatorTests {
     fun `getScheduleByCourses throws QueryException when a requested course is not found`() = runBlocking {
         val input = ScheduleQueryInput(
             school = "miami",
-            filters = mapOf("term" to "202410", "campus" to listOf("O")),
+            filters = filters("term" to "202410", "campus" to listOf("O")),
             courses = listOf("CSE 271", "ENG 111")
         )
 
         val cseSection = section("CSE", "271", "MWF 10:05am-11:00am")
 
-        whenever(connector.queryCourses(any())).thenAnswer { invocation ->
+        whenever(connector.queryCoursesLight(any())).thenAnswer { invocation ->
             val filters = invocation.arguments[0] as Map<*, *>
             val subjects = filters["subject"] as? List<*>
             if (subjects?.contains("CSE") == true) listOf(cseSection) else emptyList<SchedulableSection>()
@@ -87,15 +95,15 @@ class ScheduleCombinatorTests {
     fun `getFillerSchedules finds valid fillers`() = runBlocking {
         val input = ScheduleQueryInput(
             school = "miami",
-            filters = mapOf("term" to "202410", "campus" to listOf("O")),
+            filters = filters("term" to "202410", "campus" to listOf("O")),
             courses = listOf("CSE 271"),
-            fillerFilters = mapOf("attributes" to listOf("PA1C"))
+            fillerFilters = mapOf("attributes" to listOf("PA1C")) as Object
         )
 
         val cseSection = section("CSE", "271", "MWF 10:05am-11:00am")
         val fillerSection = section("ENG", "111", "TR 10:05am-11:00am")
 
-        whenever(connector.queryCourses(any())).thenReturn(listOf(cseSection))
+        whenever(connector.queryCoursesLight(any())).thenReturn(listOf(cseSection))
         whenever(cache.fetchFillerCourses(any(), any())).thenReturn(listOf(fillerSection))
 
         val result = combinator.getFillerSchedules(input, connector)

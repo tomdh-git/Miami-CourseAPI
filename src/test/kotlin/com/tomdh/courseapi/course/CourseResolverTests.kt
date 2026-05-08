@@ -1,5 +1,9 @@
 package com.tomdh.courseapi.course
 
+import com.tomdh.courseapi.config.CourseApiProperties
+import com.tomdh.courseapi.generated.types.CourseQueryInput
+import com.tomdh.courseapi.generated.types.ErrorCourse
+import com.tomdh.courseapi.generated.types.SuccessCourse
 import com.tomdh.schoolconnector.course.CanonicalTimeWindow
 import com.tomdh.schoolconnector.course.SchedulableSection
 import com.tomdh.schoolconnector.exceptions.types.APIException
@@ -9,7 +13,6 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
-import org.mockito.InjectMocks
 import org.mockito.Mock
 import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.kotlin.*
@@ -18,7 +21,9 @@ import org.mockito.kotlin.*
 class CourseResolverTests {
 
     @Mock lateinit var service: CourseService
-    @InjectMocks lateinit var resolver: CourseResolver
+    private val properties = CourseApiProperties()
+
+    private val resolver by lazy { CourseResolver(service, properties) }
 
     private fun testSection(name: String = "CSE 271 - OOP") = SchedulableSection(
         name = name,
@@ -26,10 +31,13 @@ class CourseResolverTests {
         data = mapOf("subject" to "CSE", "courseNum" to "271")
     )
 
+    private fun filters(vararg pairs: Pair<String, Any?>): Object =
+        mapOf(*pairs) as Object
+
     @Test
     fun `getCourses returns SuccessCourse on success`() = runBlocking {
-        val input = CourseQueryInput(school = "miami", filters = mapOf("term" to "202410", "campus" to listOf("O")))
-        whenever(service.getCourses("miami", input.filters, 10)).thenReturn(listOf(testSection()))
+        val input = CourseQueryInput(school = "miami", filters = filters("term" to "202410", "campus" to listOf("O")))
+        whenever(service.getCourses("miami", input.filters as Map<String, Any?>, 10)).thenReturn(listOf(testSection()))
 
         val result = resolver.getCourses(input, limit = 10)
 
@@ -39,7 +47,7 @@ class CourseResolverTests {
 
     @Test
     fun `getCourses returns ErrorCourse on failure for validation`() = runBlocking {
-        val input = CourseQueryInput(school = "miami", filters = mapOf("term" to "202410", "campus" to listOf("O")))
+        val input = CourseQueryInput(school = "miami", filters = filters("term" to "202410", "campus" to listOf("O")))
         whenever(service.getCourses(eq("miami"), any(), eq(100))).thenThrow(com.tomdh.courseapi.exceptions.types.ValidationException(listOf("Invalid term")))
 
         val result = resolver.getCourses(input, limit = null)
@@ -50,7 +58,7 @@ class CourseResolverTests {
 
     @Test
     fun `getCourses returns ErrorCourse on failure for query execution`() = runBlocking {
-        val input = CourseQueryInput(school = "miami", filters = mapOf("term" to "202410"))
+        val input = CourseQueryInput(school = "miami", filters = filters("term" to "202410"))
         whenever(service.getCourses(any(), any(), any())).thenThrow(QueryException("No matching course block"))
 
         val result = resolver.getCourses(input, limit = 10)
@@ -61,7 +69,7 @@ class CourseResolverTests {
 
     @Test
     fun `getCourses returns ErrorCourse on backend api or parsing failure`() = runBlocking {
-        val input = CourseQueryInput(school = "miami", filters = mapOf("term" to "202410"))
+        val input = CourseQueryInput(school = "miami", filters = filters("term" to "202410"))
         whenever(service.getCourses(any(), any(), any())).thenThrow(APIException("Connection socket timeout simulated backend outage"))
 
         val result = resolver.getCourses(input, limit = 10)

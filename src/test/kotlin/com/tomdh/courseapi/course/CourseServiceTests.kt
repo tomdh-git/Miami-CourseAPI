@@ -1,5 +1,6 @@
 package com.tomdh.courseapi.course
 
+import com.tomdh.courseapi.config.CourseApiProperties
 import com.tomdh.courseapi.exceptions.types.ValidationException
 import com.tomdh.schoolconnector.course.CanonicalTimeWindow
 import com.tomdh.schoolconnector.course.SchedulableSection
@@ -11,7 +12,6 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.extension.ExtendWith
-import org.mockito.InjectMocks
 import org.mockito.Mock
 import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.kotlin.any
@@ -22,8 +22,9 @@ class CourseServiceTests {
 
     @Mock lateinit var schoolRegistry: SchoolRegistry
     @Mock lateinit var schoolConnector: SchoolConnector
+    private val properties = CourseApiProperties()
 
-    @InjectMocks lateinit var courseService: CourseService
+    private val courseService by lazy { DefaultCourseService(schoolRegistry, properties) }
 
     private fun testSection(name: String = "CSE 271 - OOP") = SchedulableSection(
         name = name,

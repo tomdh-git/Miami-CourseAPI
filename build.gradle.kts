@@ -1,6 +1,9 @@
+import com.netflix.graphql.dgs.codegen.gradle.GenerateJavaTask
+
 plugins {
     id("org.springframework.boot") version "3.3.4"
     id("io.spring.dependency-management") version "1.1.7"
+    id("com.netflix.dgs.codegen") version "7.0.3"
     kotlin("jvm") version "2.0.21"
     kotlin("plugin.spring") version "2.0.21"
 }
@@ -26,6 +29,20 @@ dependencyManagement {
     }
 }
 
+tasks.withType<GenerateJavaTask>().configureEach {
+    schemaPaths = mutableListOf("${projectDir}/src/main/resources/schema")
+    packageName = "com.tomdh.courseapi.generated"
+    language = "kotlin"
+    typeMapping = mutableMapOf(
+        // Map GraphQL types to existing library classes instead of generating new ones
+        "CourseSection" to "com.tomdh.schoolconnector.course.SchedulableSection",
+        "TimeWindow" to "com.tomdh.schoolconnector.course.CanonicalTimeWindow",
+        "Field" to "com.tomdh.schoolconnector.field.Field",
+        // JSON scalar is handled by graphql-java-extended-scalars, not codegen
+        "JSON" to "java.lang.Object"
+    )
+}
+
 dependencies {
     // School Connector Library (transitively brings in session-aware-web-client)
     implementation("com.github.tomdh-git:school-connector:master-SNAPSHOT")
@@ -47,9 +64,6 @@ dependencies {
     // Caching
     implementation("org.springframework.boot:spring-boot-starter-cache")
     implementation("com.github.ben-manes.caffeine:caffeine")
-
-    // HTML Parsing
-    // implementation("org.jsoup:jsoup:1.17.2") // Now handled by school-connector
 
     // Actuator
     implementation("org.springframework.boot:spring-boot-starter-actuator")
