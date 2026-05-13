@@ -1,11 +1,13 @@
 package com.tomdh.courseapi.exceptions
 
 import com.tomdh.courseapi.exceptions.types.ValidationException
-import com.tomdh.schoolconnector.exceptions.types.*
+import com.tomdh.schoolconnector.exceptions.types.APIException
+import com.tomdh.schoolconnector.exceptions.types.QueryException
+import com.tomdh.schoolconnector.exceptions.types.ServerBusyException
 import org.slf4j.Logger
 
-fun Throwable.toErrorResponse(logger: Logger): Pair<String, String> {
-    return when (this) {
+fun Throwable.toErrorResponse(logger: Logger): Pair<String, String> =
+    when (this) {
         is ValidationException -> "VALIDATION_ERROR" to violations.joinToString(" | ")
         is IllegalArgumentException -> "VALIDATION_ERROR" to (message ?: "Invalid input")
         is QueryException -> "QUERY_ERROR" to (message ?: "Query error")
@@ -16,17 +18,15 @@ fun Throwable.toErrorResponse(logger: Logger): Pair<String, String> {
             "INTERNAL_ERROR" to "An unexpected error occurred"
         }
     }
-}
 
 inline fun <T> resolveQuery(
     logger: Logger,
     errorFactory: (String, String) -> T,
-    action: () -> T
-): T {
-    return try {
-        action()
+    block: () -> T
+): T =
+    try {
+        block()
     } catch (e: Exception) {
-        val (code, msg) = e.toErrorResponse(logger)
+        val (code: String, msg: String) = e.toErrorResponse(logger)
         errorFactory(code, msg)
     }
-}

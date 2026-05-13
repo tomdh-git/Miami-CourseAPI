@@ -13,9 +13,9 @@ graph TB
     end
 
     subgraph "GraphQL Layer"
-        CR["CourseResolver"]
-        FR["FieldResolver"]
-        SR["ScheduleResolver"]
+        CR["CourseDataFetcher"]
+        FR["FieldDataFetcher"]
+        SR["ScheduleDataFetcher"]
     end
 
     subgraph "Exception Handling"
@@ -100,7 +100,7 @@ graph TB
 ```mermaid
 sequenceDiagram
     participant C as Client
-    participant R as CourseResolver
+    participant R as CourseDataFetcher
     participant S as CourseService
     participant CCH as CaffeineCache
     participant REG as SchoolRegistry
@@ -135,7 +135,7 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     participant C as Client
-    participant R as ScheduleResolver
+    participant R as ScheduleDataFetcher
     participant S as ScheduleService
     participant CCH as CaffeineCache
     participant MC as MiamiConnector
@@ -166,7 +166,7 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     participant C as Client
-    participant R as FieldResolver
+    participant R as FieldDataFetcher
     participant S as FieldService
     participant REG as SchoolRegistry
     participant MC as MiamiConnector

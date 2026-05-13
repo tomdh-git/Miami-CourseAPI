@@ -36,10 +36,11 @@ tasks.withType<GenerateJavaTask>().configureEach {
     typeMapping = mutableMapOf(
         // Map GraphQL types to existing library classes instead of generating new ones
         "CourseSection" to "com.tomdh.schoolconnector.course.SchedulableSection",
-        "TimeWindow" to "com.tomdh.schoolconnector.course.CanonicalTimeWindow",
+        "TimeWindow" to "com.tomdh.schoolconnector.course.TimeWindow",
+        "CanonicalTimeWindow" to "com.tomdh.schoolconnector.course.CanonicalTimeWindow",
         "Field" to "com.tomdh.schoolconnector.field.Field",
         // JSON scalar is handled by graphql-java-extended-scalars, not codegen
-        "JSON" to "java.lang.Object"
+        "JSON" to "kotlin.Any"
     )
 }
 

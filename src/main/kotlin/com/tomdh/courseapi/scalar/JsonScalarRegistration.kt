@@ -9,7 +9,6 @@ import graphql.schema.idl.RuntimeWiring.Builder
 class JsonScalarRegistration {
 
     @DgsRuntimeWiring
-    fun addScalar(builder: Builder): Builder {
-        return builder.scalar(ExtendedScalars.Json)
-    }
+    fun addScalar(builder: Builder): Builder =
+        builder.scalar(ExtendedScalars.Json)
 }

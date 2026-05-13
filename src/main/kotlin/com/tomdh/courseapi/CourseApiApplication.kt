@@ -6,8 +6,8 @@ import org.springframework.boot.runApplication
 
 @SpringBootApplication(scanBasePackages = ["com.tomdh.courseapi", "com.tomdh.schoolconnector", "com.tomdh.sessionawarewebclient"])
 @ConfigurationPropertiesScan(basePackages = ["com.tomdh.courseapi", "com.tomdh.schoolconnector", "com.tomdh.sessionawarewebclient"])
-class CourseapiApplication
+class CourseApiApplication
 
 fun main(args: Array<String>) {
-    runApplication<CourseapiApplication>(*args)
+    runApplication<CourseApiApplication>(*args)
 }

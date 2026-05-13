@@ -1,4 +1,4 @@
-package com.tomdh.courseapi.course
+package com.tomdh.courseapi.service
 
 import com.tomdh.courseapi.exceptions.types.ValidationException
 import com.tomdh.schoolconnector.course.SchedulableSection
@@ -11,17 +11,25 @@ import org.springframework.stereotype.Service
  * Contract for querying course sections from school connectors.
  */
 interface CourseService {
-    suspend fun getCourses(school: String, filters: Map<String, Any?>, limit: Int): List<SchedulableSection>
+    suspend fun getCourses(
+        school: String,
+        filters: Map<String, Any?>,
+        limit: Int
+    ): List<SchedulableSection>
 }
 
 @Service
 class DefaultCourseService(private val registry: SchoolRegistry) : CourseService {
 
     @Cacheable(value = ["courses"], key = "{#school, #filters, #limit}")
-    override suspend fun getCourses(school: String, filters: Map<String, Any?>, limit: Int): List<SchedulableSection> {
+    override suspend fun getCourses(
+        school: String,
+        filters: Map<String, Any?>,
+        limit: Int
+    ): List<SchedulableSection> {
         val connector = registry.getConnector(school)
 
-        val errors = connector.validateFilters(filters)
+        val errors: List<String> = connector.validateFilters(filters)
         if (errors.isNotEmpty()) throw ValidationException(errors)
 
         return connector.queryCourses(filters)

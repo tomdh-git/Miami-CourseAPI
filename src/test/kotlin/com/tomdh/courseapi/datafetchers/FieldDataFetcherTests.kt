@@ -1,4 +1,4 @@
-package com.tomdh.courseapi.field
+package com.tomdh.courseapi.datafetchers
 
 import com.tomdh.courseapi.generated.types.ErrorField
 import com.tomdh.courseapi.generated.types.SuccessField
@@ -8,16 +8,17 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
+import com.tomdh.courseapi.service.FieldService
 import org.mockito.InjectMocks
 import org.mockito.Mock
 import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.kotlin.whenever
 
 @ExtendWith(MockitoExtension::class)
-class FieldResolverTests {
+class FieldDataFetcherTests {
 
     @Mock lateinit var service: FieldService
-    @InjectMocks lateinit var resolver: FieldResolver
+    @InjectMocks lateinit var resolver: FieldDataFetcher
 
     @Test
     fun `getTerms returns SuccessField`() = runBlocking {

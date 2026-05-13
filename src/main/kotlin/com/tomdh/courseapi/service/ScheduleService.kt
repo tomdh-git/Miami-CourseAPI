@@ -1,9 +1,10 @@
-package com.tomdh.courseapi.schedule
+package com.tomdh.courseapi.service
 
 import com.tomdh.courseapi.exceptions.types.ValidationException
 import com.tomdh.courseapi.generated.types.Schedule
 import com.tomdh.courseapi.generated.types.ScheduleQueryInput
-import com.tomdh.courseapi.schedule.combinator.ScheduleCombinator
+import com.tomdh.courseapi.service.combinator.ScheduleCombinator
+import com.tomdh.courseapi.scalar.JsonScalarUtils
 import com.tomdh.schoolconnector.school.SchoolRegistry
 import org.springframework.cache.annotation.Cacheable
 import org.springframework.stereotype.Service
@@ -28,19 +29,14 @@ class DefaultScheduleService(
     override suspend fun getSchedules(input: ScheduleQueryInput): List<Schedule> {
         val connector = registry.getConnector(input.school)
 
-        @Suppress("UNCHECKED_CAST")
-        val filters = input.filters as Map<String, Any?>
+        val filters: Map<String, Any?> = JsonScalarUtils.safeCastToMap(input.filters)
 
         // Validate the base filters
-        val errors = connector.validateFilters(filters)
+        val errors: List<String> = connector.validateFilters(filters)
         if (errors.isNotEmpty()) throw ValidationException(errors)
 
-        @Suppress("UNCHECKED_CAST")
-        val fillerFilters = input.fillerFilters as? Map<String, Any?>
-        return if (fillerFilters != null) {
-            combinator.getFillerSchedules(input, connector)
-        } else {
-            combinator.getScheduleByCourses(input, connector)
-        }
+        val fillerFilters: Map<String, Any?>? = input.fillerFilters?.let { JsonScalarUtils.safeCastToMap(it) }
+        return if (!fillerFilters.isNullOrEmpty()) combinator.getFillerSchedules(input, connector)
+        else combinator.getScheduleByCourses(input, connector)
     }
 }

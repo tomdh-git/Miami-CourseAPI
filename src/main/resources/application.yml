@@ -11,6 +11,9 @@ spring:
       max-request-size: 10MB
   lifecycle:
     timeout-per-shutdown-phase: 30s
+  output:
+    ansi:
+      enabled: always
 
 server:
   port: 0

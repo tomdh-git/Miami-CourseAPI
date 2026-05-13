@@ -1,4 +1,4 @@
-package com.tomdh.courseapi.schedule
+package com.tomdh.courseapi.datafetchers
 
 import com.tomdh.courseapi.config.CourseApiProperties
 import com.tomdh.courseapi.generated.types.ErrorSchedule
@@ -9,6 +9,7 @@ import com.tomdh.schoolconnector.course.CanonicalTimeWindow
 import com.tomdh.schoolconnector.course.SchedulableSection
 import com.tomdh.schoolconnector.exceptions.types.APIException
 import com.tomdh.schoolconnector.exceptions.types.QueryException
+import com.tomdh.courseapi.service.ScheduleService
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -20,12 +21,12 @@ import org.mockito.kotlin.whenever
 
 @Suppress("UNCHECKED_CAST")
 @ExtendWith(MockitoExtension::class)
-class ScheduleResolverTests {
+class ScheduleDataFetcherTests {
 
     @Mock lateinit var service: ScheduleService
     private val properties = CourseApiProperties()
 
-    private val resolver by lazy { ScheduleResolver(service, properties) }
+    private val resolver by lazy { ScheduleDataFetcher(service, properties) }
 
     private fun filters(vararg pairs: Pair<String, Any?>): Object =
         mapOf(*pairs) as Object

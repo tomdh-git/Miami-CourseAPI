@@ -7,6 +7,8 @@ build/
 !gradle/wrapper/gradle-wrapper.jar
 !**/src/main/**/build/
 !**/src/test/**/build/
+school-connector
+session-aware-web-client
 
 ### STS ###
 .apt_generated
@@ -41,3 +43,6 @@ out/
 
 ### Kotlin ###
 .kotlin
+
+### Zed ###
+.zed

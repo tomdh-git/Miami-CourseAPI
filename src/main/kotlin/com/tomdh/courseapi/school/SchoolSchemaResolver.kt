@@ -16,13 +16,13 @@ class SchoolSchemaResolver(private val registry: SchoolRegistry) {
 
     @DgsQuery
     fun getSchoolSchema(@InputArgument school: String): SchoolSchemaResult {
-        return resolveQuery(logger, ::ErrorSchoolSchema) {
+        return resolveQuery(logger = logger, errorFactory = ::ErrorSchoolSchema) {
             val connector = registry.getConnector(school)
             val schema = connector.getSchema()
             SuccessSchoolSchema(
                 school = school,
-                inputSchema = schema.inputSchema as Object,
-                outputSchema = schema.outputSchema as Object
+                inputSchema = schema.inputSchema,
+                outputSchema = schema.outputSchema
             )
         }
     }

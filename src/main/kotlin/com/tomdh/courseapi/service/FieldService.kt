@@ -1,4 +1,4 @@
-package com.tomdh.courseapi.field
+package com.tomdh.courseapi.service
 
 import com.tomdh.schoolconnector.exceptions.types.APIException
 import com.tomdh.schoolconnector.school.SchoolRegistry

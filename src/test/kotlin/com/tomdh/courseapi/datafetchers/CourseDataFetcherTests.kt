@@ -1,4 +1,4 @@
-package com.tomdh.courseapi.course
+package com.tomdh.courseapi.datafetchers
 
 import com.tomdh.courseapi.config.CourseApiProperties
 import com.tomdh.courseapi.generated.types.CourseQueryInput
@@ -8,6 +8,7 @@ import com.tomdh.schoolconnector.course.CanonicalTimeWindow
 import com.tomdh.schoolconnector.course.SchedulableSection
 import com.tomdh.schoolconnector.exceptions.types.APIException
 import com.tomdh.schoolconnector.exceptions.types.QueryException
+import com.tomdh.courseapi.service.CourseService
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -18,12 +19,12 @@ import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.kotlin.*
 
 @ExtendWith(MockitoExtension::class)
-class CourseResolverTests {
+class CourseDataFetcherTests {
 
     @Mock lateinit var service: CourseService
     private val properties = CourseApiProperties()
 
-    private val resolver by lazy { CourseResolver(service, properties) }
+    private val resolver by lazy { CourseDataFetcher(service, properties) }
 
     private fun testSection(name: String = "CSE 271 - OOP") = SchedulableSection(
         name = name,
