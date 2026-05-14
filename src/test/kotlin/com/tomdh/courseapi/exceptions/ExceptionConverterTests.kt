@@ -53,4 +53,21 @@ class ExceptionConverterTests {
         }
         assertEquals("Error: API_ERROR", result)
     }
+
+    @Test
+    fun `toErrorResponse maps IllegalArgumentException to VALIDATION_ERROR`() {
+        val ex = IllegalArgumentException("Unknown school: INVALID")
+        val (code, msg) = ex.toErrorResponse(logger)
+        assertEquals("VALIDATION_ERROR", code)
+        assertEquals("Unknown school: INVALID", msg)
+    }
+
+    @Test
+    fun `toErrorResponse maps unexpected RuntimeException to INTERNAL_ERROR`() {
+        val ex = RuntimeException("Something unexpected")
+        val (code, msg) = ex.toErrorResponse(logger)
+        assertEquals("INTERNAL_ERROR", code)
+        assertEquals("An unexpected error occurred", msg)
+    }
 }
+

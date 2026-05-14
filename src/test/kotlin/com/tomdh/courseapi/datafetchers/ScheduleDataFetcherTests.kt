@@ -96,4 +96,41 @@ class ScheduleDataFetcherTests {
         assertTrue(result is ErrorSchedule)
         assertEquals("API_ERROR", (result as ErrorSchedule).error)
     }
+
+    @Test
+    fun `getSchedules returns ErrorSchedule for server busy`() = runBlocking {
+        val input = ScheduleQueryInput(
+            school = "miami",
+            filters = filters("term" to "202410", "campus" to listOf("O")),
+            courses = listOf("CSE 271")
+        )
+        whenever(service.getSchedules(input)).thenThrow(com.tomdh.schoolconnector.exceptions.types.ServerBusyException("Rate limited"))
+
+        val result = resolver.getSchedules(input, limit = null)
+
+        assertTrue(result is ErrorSchedule)
+        assertEquals("SERVER_BUSY", (result as ErrorSchedule).error)
+    }
+
+    @Test
+    fun `getSchedules respects limit parameter`() = runBlocking {
+        val input = ScheduleQueryInput(
+            school = "miami",
+            filters = filters("term" to "202410", "campus" to listOf("O")),
+            courses = listOf("CSE 271")
+        )
+        val section = SchedulableSection(
+            name = "CSE 271 - OOP",
+            timeWindows = listOf(CanonicalTimeWindow("MONDAY", "10:00am", "10:50am")),
+            data = mapOf("subject" to "CSE")
+        )
+        val schedules = (1..5).map { Schedule(sections = listOf(section), freeTime = it * 10) }
+        whenever(service.getSchedules(input)).thenReturn(schedules)
+
+        val result = resolver.getSchedules(input, limit = 2)
+
+        assertTrue(result is SuccessSchedule)
+        assertEquals(2, (result as SuccessSchedule).schedules.size)
+    }
 }
+

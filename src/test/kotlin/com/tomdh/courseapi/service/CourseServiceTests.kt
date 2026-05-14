@@ -71,4 +71,30 @@ class CourseServiceTests {
     }
     assertEquals(2, ex.violations.size)
   }
+
+  @Test
+  fun `getCourses truncates results to limit`() = runBlocking {
+    val filters = mapOf<String, Any?>("term" to "202410", "campus" to listOf("O"))
+    val sections = (1..10).map { testSection("CSE $it - Test Course") }
+
+    whenever(schoolRegistry.getConnector("miami")).thenReturn(schoolConnector)
+    whenever(schoolConnector.validateFilters(any())).thenReturn(emptyList())
+    whenever(schoolConnector.queryCourses(any())).thenReturn(sections)
+
+    val result = courseService.getCourses("miami", filters, 3)
+
+    assertEquals(3, result.size)
+  }
+
+  @Test
+  fun `getCourses throws IllegalArgumentException for unknown school`() = runBlocking {
+    val filters = mapOf<String, Any?>("term" to "202410")
+
+    whenever(schoolRegistry.getConnector("INVALID")).thenThrow(IllegalArgumentException("Unknown school: INVALID"))
+
+    assertThrows<IllegalArgumentException> {
+      courseService.getCourses("INVALID", filters, 100)
+    }
+  }
 }
+

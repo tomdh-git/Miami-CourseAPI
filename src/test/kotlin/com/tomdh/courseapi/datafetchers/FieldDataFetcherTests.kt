@@ -40,4 +40,24 @@ class FieldDataFetcherTests {
         assertTrue(result is ErrorField)
         assertEquals("VALIDATION_ERROR", (result as ErrorField).error)
     }
+
+    @Test
+    fun `getTerms returns ErrorField on API failure`() = runBlocking {
+        whenever(service.getTerms("miami")).thenThrow(com.tomdh.schoolconnector.exceptions.types.APIException("Connection timeout"))
+
+        val result = resolver.getTerms("miami")
+
+        assertTrue(result is ErrorField)
+        assertEquals("API_ERROR", (result as ErrorField).error)
+    }
+
+    @Test
+    fun `getTerms returns ErrorField on server busy`() = runBlocking {
+        whenever(service.getTerms("miami")).thenThrow(com.tomdh.schoolconnector.exceptions.types.ServerBusyException("Rate limited"))
+
+        val result = resolver.getTerms("miami")
+
+        assertTrue(result is ErrorField)
+        assertEquals("SERVER_BUSY", (result as ErrorField).error)
+    }
 }

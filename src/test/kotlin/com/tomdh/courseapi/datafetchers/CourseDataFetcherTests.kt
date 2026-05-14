@@ -78,4 +78,28 @@ class CourseDataFetcherTests {
         assertTrue(result is ErrorCourse)
         assertEquals("API_ERROR", (result as ErrorCourse).error)
     }
+
+    @Test
+    fun `getCourses returns ErrorCourse on server busy`() = runBlocking {
+        val input = CourseQueryInput(school = "miami", filters = filters("term" to "202410"))
+        whenever(service.getCourses(any(), any(), any())).thenThrow(com.tomdh.schoolconnector.exceptions.types.ServerBusyException("Too many requests"))
+
+        val result = resolver.getCourses(input, limit = 10)
+
+        assertTrue(result is ErrorCourse)
+        assertEquals("SERVER_BUSY", (result as ErrorCourse).error)
+    }
+
+    @Test
+    fun `getCourses passes limit parameter through to service`() = runBlocking {
+        val input = CourseQueryInput(school = "miami", filters = filters("term" to "202410", "campus" to listOf("O")))
+        val sections = (1..5).map { testSection("CSE $it - Test") }
+        whenever(service.getCourses(eq("miami"), any(), eq(3))).thenReturn(sections.take(3))
+
+        val result = resolver.getCourses(input, limit = 3)
+
+        assertTrue(result is SuccessCourse)
+        assertEquals(3, (result as SuccessCourse).courses.size)
+    }
 }
+

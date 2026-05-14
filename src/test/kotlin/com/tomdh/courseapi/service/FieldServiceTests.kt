@@ -43,4 +43,14 @@ class FieldServiceTests {
       fieldService.getTerms("miami")
     }
   }
+
+  @Test
+  fun `getTerms throws IllegalArgumentException for unknown school`() = runBlocking {
+    whenever(registry.getConnector("INVALID")).thenThrow(IllegalArgumentException("Unknown school: INVALID"))
+
+    assertThrows<IllegalArgumentException> {
+      fieldService.getTerms("INVALID")
+    }
+  }
 }
+
