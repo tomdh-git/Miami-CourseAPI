@@ -126,18 +126,19 @@ fi
 # ── 3. getCourses (discover a real course + CRN) ────
 TOTAL=$((TOTAL + 1))
 echo ""
-echo "Test: 3. getCourses (discover real course data for term $TERM)"
-COURSES_RESPONSE=$(gql "query { getCourses(input: { school: \\\"miami\\\", filters: { term: \\\"$TERM\\\", subject: [\\\"CSE\\\"], campus: [\\\"O\\\"] } }, limit: 5) { ... on SuccessCourse { courses { name data } } ... on ErrorCourse { error message } } }")
+echo "Test: 3. getCourses (discover real scheduled course data for term $TERM)"
+COURSES_RESPONSE=$(gql "query { getCourses(input: { school: \\\"miami\\\", filters: { term: \\\"$TERM\\\", subject: [\\\"CSE\\\"], campus: [\\\"O\\\"] } }, limit: 20) { ... on SuccessCourse { courses { name data timeWindows { day } } } ... on ErrorCourse { error message } } }")
 
-COURSE_NAME_RAW=$(echo "$COURSES_RESPONSE" | jq -r '.data.getCourses.courses[0].name // empty' 2>/dev/null || echo "")
-COURSE_CRN=$(echo "$COURSES_RESPONSE" | jq -r '.data.getCourses.courses[0].data.crn // empty' 2>/dev/null || echo "")
-# Extract "CSE 271" format from "CSE 271 - Object Oriented Programming"
+# Pick the first course that has timeWindows defined (so schedule combinator can actually schedule it)
+COURSE_NAME_RAW=$(echo "$COURSES_RESPONSE" | jq -r '[.data.getCourses.courses[] | select(.timeWindows != null and (.timeWindows | length) > 0)] | .[0].name // empty' 2>/dev/null || echo "")
+COURSE_CRN=$(echo "$COURSES_RESPONSE" | jq -r '[.data.getCourses.courses[] | select(.timeWindows != null and (.timeWindows | length) > 0)] | .[0].data.crn // empty' 2>/dev/null || echo "")
+# Extract "CSE 148" format from "CSE 148 - Introduction to ..."
 COURSE_SHORT=$(echo "$COURSE_NAME_RAW" | sed 's/ - .*//')
 
 if [ -n "$COURSE_NAME_RAW" ] && [ -n "$COURSE_CRN" ]; then
   echo "  ✅ PASS — Discovered course: '$COURSE_SHORT' (CRN: $COURSE_CRN)"
 else
-  echo "  ❌ FAIL — Could not discover course data."
+  echo "  ❌ FAIL — Could not discover scheduled course data."
   echo "  Response: $COURSES_RESPONSE"
   echo "  Cannot continue — subsequent tests depend on discovered course data."
   exit 1
@@ -156,7 +157,7 @@ run_test "4. getCourses (success — by subject filter with timeWindows)" \
 
 # ── 5. getCourses by CRN ───────────────────────────
 run_test "5. getCourses (success — by CRN)" \
-  "query { getCourses(input: { school: \\\"miami\\\", filters: { term: \\\"$TERM\\\", crn: \\\"$COURSE_CRN\\\" } }) { ... on SuccessCourse { courses { name data } } ... on ErrorCourse { error message } } }" \
+  "query { getCourses(input: { school: \\\"miami\\\", filters: { term: \\\"$TERM\\\", crn: \\\"$COURSE_CRN\\\", campus: [\\\"O\\\"] } }) { ... on SuccessCourse { courses { name data } } ... on ErrorCourse { error message } } }" \
   '.data.getCourses.courses[0].name // empty'
 
 # ── 6. getSchedules (success combinations) ──────────
