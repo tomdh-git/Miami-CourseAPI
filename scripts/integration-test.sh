@@ -36,6 +36,8 @@ run_test() {
   echo ""
   echo "Test: $name"
 
+  sleep 2
+
   local response
   response=$(gql "$query")
 
@@ -66,6 +68,8 @@ run_test_eq() {
   TOTAL=$((TOTAL + 1))
   echo ""
   echo "Test: $name"
+  
+  sleep 2
 
   local response
   response=$(gql "$query")
@@ -109,6 +113,7 @@ fi
 TOTAL=$((TOTAL + 1))
 echo ""
 echo "Test: 2. getTerms (discover a valid term)"
+sleep 2
 TERMS_RESPONSE=$(gql "query { getTerms(school: \\\"miami\\\") { ... on SuccessField { fields { name } } ... on ErrorField { error message } } }")
 
 # Pick the first term that ends with '10' (Fall) or '20' (Spring) to ensure we find scheduled (in-person) classes
@@ -128,6 +133,7 @@ fi
 TOTAL=$((TOTAL + 1))
 echo ""
 echo "Test: 3. getCourses (discover real scheduled course data for term $TERM)"
+sleep 2
 COURSES_RESPONSE=$(gql "query { getCourses(input: { school: \\\"miami\\\", filters: { term: \\\"$TERM\\\", subject: [\\\"CSE\\\"], campus: [\\\"O\\\"] } }, limit: 50) { ... on SuccessCourse { courses { name data timeWindows { day } } } ... on ErrorCourse { error message } } }")
 
 # Pick the first course that has timeWindows defined (so schedule combinator can actually schedule it)
