@@ -45,9 +45,9 @@ run_test "5. getCourses (Success by filter)" \
   "query { getCourses(input: { school: \\\"miami\\\", filters: { term: \\\"202510\\\", subject: [\\\"CSE\\\"], courseNum: \\\"271\\\", campus: [\\\"O\\\"] } }) { ... on SuccessCourse { courses { name timeWindows { startTime } data } } } }" \
   "\"courses\""
 
-run_test "6. getCourses (Success by CRN)" \
-  "query { getCourses(input: { school: \\\"miami\\\", filters: { term: \\\"202510\\\", crn: \\\"12345\\\" } }) { ... on SuccessCourse { courses { name } } ... on ErrorCourse { error } } }" \
-  "\"QUERY_ERROR\"" # (Expected query error if CRN lacks mapping or is bad, but tests Query Error trapping)
+run_test "6. getCourses (Invalid CRN -> Validation Error)" \
+"query { getCourses(input: { school: \\\"miami\\\", filters: { term: \\\"202510\\\", crn: \\\"12345\\\" } }) { ... on SuccessCourse { courses { name } } ... on ErrorCourse { error } } }" \
+"\"error\":\"VALIDATION_ERROR\"" # CRN 12345 fails validation in school connector
 
 run_test "7. getCourses (Missing 'term' filter -> Validation Error)" \
   "query { getCourses(input: { school: \\\"miami\\\", filters: { subject: [\\\"CSE\\\"] } }) { ... on ErrorCourse { error message } } }" \
