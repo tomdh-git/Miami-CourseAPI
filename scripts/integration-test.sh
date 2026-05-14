@@ -111,13 +111,14 @@ echo ""
 echo "Test: 2. getTerms (discover a valid term)"
 TERMS_RESPONSE=$(gql "query { getTerms(school: \\\"miami\\\") { ... on SuccessField { fields { name } } ... on ErrorField { error message } } }")
 
-# Pick the second term (index 1) — index 0 is often an empty sentinel in Miami's API
-TERM=$(echo "$TERMS_RESPONSE" | jq -r '[.data.getTerms.fields[].name | select(length > 0)] | .[0] // empty' 2>/dev/null || echo "")
+# Pick the first term that ends with '10' (Fall) or '20' (Spring) to ensure we find scheduled (in-person) classes
+# Winter ('15') and Summer ('30') are mostly asynchronous web classes.
+TERM=$(echo "$TERMS_RESPONSE" | jq -r '[.data.getTerms.fields[].name | select(endswith("10") or endswith("20"))] | .[0] // empty' 2>/dev/null || echo "")
 
 if [ -n "$TERM" ]; then
   echo "  ✅ PASS — Discovered term: $TERM"
 else
-  echo "  ❌ FAIL — Could not discover a valid term."
+  echo "  ❌ FAIL — Could not discover a valid Fall/Spring term."
   echo "  Response: $TERMS_RESPONSE"
   echo "  Cannot continue — subsequent tests depend on a valid term."
   exit 1
@@ -127,7 +128,7 @@ fi
 TOTAL=$((TOTAL + 1))
 echo ""
 echo "Test: 3. getCourses (discover real scheduled course data for term $TERM)"
-COURSES_RESPONSE=$(gql "query { getCourses(input: { school: \\\"miami\\\", filters: { term: \\\"$TERM\\\", subject: [\\\"CSE\\\"], campus: [\\\"O\\\"] } }, limit: 20) { ... on SuccessCourse { courses { name data timeWindows { day } } } ... on ErrorCourse { error message } } }")
+COURSES_RESPONSE=$(gql "query { getCourses(input: { school: \\\"miami\\\", filters: { term: \\\"$TERM\\\", subject: [\\\"CSE\\\"], campus: [\\\"O\\\"] } }, limit: 50) { ... on SuccessCourse { courses { name data timeWindows { day } } } ... on ErrorCourse { error message } } }")
 
 # Pick the first course that has timeWindows defined (so schedule combinator can actually schedule it)
 COURSE_NAME_RAW=$(echo "$COURSES_RESPONSE" | jq -r '[.data.getCourses.courses[] | select(.timeWindows != null and (.timeWindows | length) > 0)] | .[0].name // empty' 2>/dev/null || echo "")
