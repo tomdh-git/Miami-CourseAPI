@@ -5,14 +5,12 @@ This introspection query exposes exactly what inputs any given school accepts. T
 ```graphql
 query {
   getSchoolSchema(school: "miami") {
-    ... on SuccessSchema {
-      schema {
-        schemaId
-        inputSchema
-        outputSchema
-      }
-    }
-    ... on ErrorSchema {
+  ... on SuccessSchoolSchema {
+    school
+    inputSchema
+    outputSchema
+  }
+  ... on ErrorSchoolSchema {
       error
       message
     }

@@ -26,11 +26,11 @@ run_test() {
 }
 
 run_test "1. getSchoolSchema (Success)" \
-  "query { getSchoolSchema(school: \\\"miami\\\") { ... on SuccessSchema { schema { schemaId inputSchema } } } }" \
+  "query { getSchoolSchema(school: \\\"miami\\\") { ... on SuccessSchoolSchema { school inputSchema } } }" \
   "\"inputSchema\""
 
 run_test "2. getSchoolSchema (Invalid School -> Validation Error)" \
-  "query { getSchoolSchema(school: \\\"INVALID_SCHOOL\\\") { ... on ErrorSchema { error message } } }" \
+  "query { getSchoolSchema(school: \\\"INVALID_SCHOOL\\\") { ... on ErrorSchoolSchema { error message } } }" \
   "\"error\":\"VALIDATION_ERROR\""
 
 run_test "3. getTerms (Success)" \
